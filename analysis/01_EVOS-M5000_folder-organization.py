@@ -24,7 +24,7 @@ f.write("Notes:\n")
 
 # script start
 f.write("creating moving folders...\n")
-dirs = [x for x in os.listdir(data_source)]
+files = [x for x in os.listdir(data_source)]
 move_path_GFP = ("%sGFP/" % data_source)
 if not os.path.exists(move_path_GFP):
     os.makedirs(move_path_GFP)
@@ -36,7 +36,7 @@ if not os.path.exists(move_path_merge):
     os.makedirs(move_path_merge)
 
 f.write("moving files...\n")
-for i in dirs:
+for i in files:
     if 'GFP' in i:
         shutil.move(("%s%s" % (data_source, i)), move_path_GFP)
     elif 'TRANS' in i:
