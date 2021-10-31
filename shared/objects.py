@@ -18,6 +18,11 @@ remove_small
 remove_large
     FUNCTION: remove objects larger than the specified size
     SYNTAX:   remove_large(obj: np.array, max_size=1000)
+
+get_intensity
+    FUNCTION: measure mean intensity time series for all given objects
+    SYNTAX:   get_intensity(obj: np.array, pixels_tseries: list)
+
 """
 
 
@@ -62,3 +67,29 @@ def remove_large(obj: np.array, max_size=1000):
     out[obj_mask] = 0
 
     return out
+
+
+def get_intensity(label_obj: np.array, pixels_tseries: list):
+    """
+    Measure mean intensity time series for all given objects
+
+    Usage examples:
+    1) measure bleach spots/ctrl spots intensity series
+
+    :param label_obj: np.array, 0-and-1 object mask
+    :param pixels_tseries: list, pixels time series
+                e.g. [pixels_t0, pixels_t1, pixels_t2, ...]
+    :return: obj_int_tseries: list
+                list of intensity time series
+    """
+
+    max_t = len(pixels_tseries)
+    obj_int_tseries = [[] for _ in range(len(np.unique(label_obj))-1)]
+
+    for t in range(0, max_t):
+        # measure mean intensity for objects
+        obj_props = regionprops(label_obj, pixels_tseries[t])
+        for i in range(len(obj_props)):
+            obj_int_tseries[i].append(obj_props[i].mean_intensity)
+
+    return obj_int_tseries
