@@ -6,6 +6,8 @@ from skimage.filters import try_all_threshold, threshold_otsu
 from skimage.measure import label, regionprops
 from skimage.morphology import binary_dilation, binary_erosion, disk, remove_small_objects
 from scipy import ndimage
+import shared.segmentation as seg
+import shared.objects as obj
 
 # input parameters
 exp_name = '20211022_EVOS-M5000_ColoDM-Cas9_nucleofectionTest'
@@ -17,8 +19,13 @@ ch2 = 'TRANS'  # channel for segmentation, generally TRANS or BFP
 files = [x for x in os.listdir("%s%s/" % (data_source, ch1))]
 
 for i in files:
-    img_ch1 = plt.imread('%s%s/%s' % (data_source, ch1, i))
+    # load images
+    img_ch1 = plt.imread('%s%s/%s' % (data_source, ch1, i))[:, :, 1]
     img_ch2 = plt.imread('%s%s/%s%s.tif' % (data_source, ch2, i[:-(len(ch1)+4)], ch2))
+
+    cell = seg.cell_seg_trans(img_ch2)
+    cell_int = obj.get_intensity(label(cell), [img_ch1])
+
 
 
 #viewer = napari.Viewer()
