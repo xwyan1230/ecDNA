@@ -11,6 +11,10 @@ List related:
     list_unwrap
         FUNCTION: unwrap one layer of a list with first element per sublist
         SYNTAX:   list_unwrap(lst: list)
+    
+    str_to_float
+        FUNCTION: transform a string into a list of floats
+        SYNTAX:   str_to_float(string: str)
 """
 
 
@@ -27,4 +31,20 @@ def list_unwrap(lst: list):
     out = list()
     for i in range(len(lst)):
         out.append(lst[i][0])
+    return out
+
+
+def str_to_float(string: str):
+    """
+    Transform a string into a list of floats
+
+    Examples:
+    input string: (24 characters)
+    [5.55, 6.53, 7.35, 8.91]
+    output list: (4 elements)
+    [5.55, 6.53, 7.35, 8.91]
+    :param string: str, string to be converted
+    :return: out: list
+    """
+    out = [float(i) for i in string[1:-1].split(', ')]
     return out
