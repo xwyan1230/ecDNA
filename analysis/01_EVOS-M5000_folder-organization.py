@@ -3,9 +3,10 @@ import shutil
 from datetime import datetime
 
 # input parameters
-exp_name = '20211022_EVOS-M5000_ColoDM-Cas9_nucleofectionTest'
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20211022_ColoDM-Cas9_nucleofectionTest/"
-data_source = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20211022_ColoDM-Cas9_nucleofectionTest/EVOS_M5000/"
+exp_name = '20211207_EVOS-M5000_ColoDM-Cas9_nucleofectionTest'
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20211207_nucleofection-GFPtest/"
+data_source = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20211207_nucleofection-GFPtest/"
+ch = ['GFP', 'Trans']
 
 # log all the running info
 if not os.path.exists("%slog.txt" % master_folder):
@@ -25,24 +26,16 @@ f.write("Notes:\n")
 # script start
 f.write("creating moving folders...\n")
 files = [x for x in os.listdir(data_source)]
-move_path_GFP = ("%sGFP/" % data_source)
-if not os.path.exists(move_path_GFP):
-    os.makedirs(move_path_GFP)
-move_path_TRANS = ("%sTRANS/" % data_source)
-if not os.path.exists(move_path_TRANS):
-    os.makedirs(move_path_TRANS)
-move_path_merge = ("%smerge/" % data_source)
-if not os.path.exists(move_path_merge):
-    os.makedirs(move_path_merge)
+for i in range(len(ch)):
+    move_path = "%s%s/" % (data_source, ch[i])
+    if not os.path.exists(move_path):
+        os.makedirs(move_path)
 
 f.write("moving files...\n")
-for i in files:
-    if 'GFP' in i:
-        shutil.move(("%s%s" % (data_source, i)), move_path_GFP)
-    elif 'TRANS' in i:
-        shutil.move(("%s%s" % (data_source, i)), move_path_TRANS)
-    else:
-        shutil.move(("%s%s" % (data_source, i)), move_path_merge)
+for j in files:
+    for i in ch:
+        if i in j:
+            shutil.move(("%s%s" % (data_source, j)), ("%s%s/" % (data_source, i)))
 
 print("DONE!")
 f.write("DONE!\n\n")
