@@ -6,14 +6,15 @@ from datetime import datetime
 import shared.segmentation as seg
 import shared.objects as obj
 import shared.dataframe as dat
+import shared.image as img
 import napari
 
 # input parameters
-exp_name = '20211022_EVOS-M5000_ColoDM-Cas9_nucleofectionTest'
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20211022_ColoDM-Cas9_nucleofectionTest/"
-data_source = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20211022_ColoDM-Cas9_nucleofectionTest/EVOS_M5000/"
-ch1 = 'GFP'  # channel for intensity measurement
-ch2 = 'TRANS'  # channel for segmentation, generally TRANS or BFP
+exp_name = '20211210_EVOS-M5000_CRISPR-KO_nucleofectionAndLipofectionTest'
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20211210_CRISPR-KO_nucleofectionAndLipofectionTest/"
+data_source = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20211210_CRISPR-KO_nucleofectionAndLipofectionTest/"
+ch1 = 'RFP'  # channel for intensity measurement
+ch2 = 'DAPI'  # channel for segmentation, generally TRANS, Trans or other fluorescent channels
 
 # write log file
 f = open("%slog.txt" % master_folder, "a+")
@@ -40,11 +41,15 @@ for i in files:
     print('# Analyzing %s ... (%d/%d)' % (i[:-(len(ch1)+5)], count+1, len(files)))
 
     # load images
-    img_ch1 = plt.imread('%s%s/%s' % (data_source, ch1, i))[:, :, 1]
-    img_ch2 = plt.imread('%s%s/%s%s.tif' % (data_source, ch2, i[:-(len(ch1)+4)], ch2))
+    img_ch1 = img.img_to_int(plt.imread('%s%s/%s' % (data_source, ch1, i)))
+    img_ch2 = img.img_to_int(plt.imread('%s%s/%s%s.tif' % (data_source, ch2, i[:-(len(ch1)+4)], ch2)))
     # segment cells and get intensity information
-    cell = seg.cell_seg_trans(img_ch2)
-    cell_int = dat.list_unwrap(obj.get_intensity(label(cell), [img_ch1]))
+    if ch2 == 'Trans' or 'TRANS':
+        cell = seg.cell_seg_trans(img_ch2)
+        label_cell = label(cell)
+    else:
+        label_cell = seg.cell_seg_fluorescent(img_ch2)
+    cell_int = dat.list_unwrap(obj.get_intensity(label_cell, [img_ch1]))
     # add data into lists
     data_sample.append(i[:-(len(ch1)+5)])
     data_int.append(cell_int)
