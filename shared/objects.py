@@ -23,6 +23,21 @@ get_intensity
     FUNCTION: measure mean intensity time series for all given objects
     SYNTAX:   get_intensity(obj: np.array, pixels_tseries: list)
 
+label_watershed
+    FUNCTION: separate touching objects based on distance map (similar to imageJ watershed)
+    SYNTAX:   label_watershed(obj: np.array)
+    
+label_remove_large
+    FUNCTION: remove objects larger than the specified size from labeled image
+    SYNTAX:   label_remove_large(label_obj: np.array, max_size: int)
+
+label_remove_small
+    FUNCTION: remove objects smaller than the specified size from labeled image
+    SYNTAX:   label_remove_small(label_obj: np.array, min_size: int)
+    
+label_remove_low_circ
+    FUNCTION: remove objects whose circularity are smaller than the specified threshold from labeled image
+    SYNTAX:   label_remove_low_circ(label_obj: np.array, thresh: float)
 """
 
 
@@ -93,3 +108,89 @@ def get_intensity(label_obj: np.array, pixels_tseries: list):
             obj_int_tseries[i].append(obj_props[i].mean_intensity)
 
     return obj_int_tseries
+
+
+def label_watershed(obj: np.array, maxima_threshold):
+    """
+    Separate touching objects based on distance map (similar to imageJ watershed)
+
+    :param obj: np.array, 0-and-1
+    :param maxima_threshold: threshold for identify maxima
+    :return: seg: np.array, grey scale with different objects labeled with different numbers
+    """
+    _, dis = medial_axis(obj, return_distance=True)
+    maxima = extrema.h_maxima(dis, maxima_threshold)
+    # maxima_threshold for Jess data = 1
+    # maxima_threshold for Jose 60x data = 10
+    # maxima_threshold for Jose 40x data = 20
+    maxima_mask = binary_dilation(maxima)
+    for i in range(6):
+        maxima_mask = binary_dilation(maxima_mask)
+
+    label_maxima = label(maxima_mask, connectivity=2)
+    markers = label_maxima.copy()
+    markers[obj == 0] = np.amax(label_maxima) + 1
+    elevation_map = sobel(obj)
+    label_obj = segmentation.watershed(elevation_map, markers)
+    label_obj[label_obj == np.amax(label_maxima) + 1] = 0
+
+    return label_obj
+
+
+def label_remove_large(label_obj: np.array, max_size: int):
+    """
+    Remove objects larger than the specified size from labeled image
+
+    :param label_obj: np.array, grey scale labeled image
+    :param max_size: int
+                The largest allowable object size
+    :return: out: np.array, grey scale labeled image with large objects removed
+    """
+    out = np.zeros_like(label_obj)
+    obj_prop = regionprops(label_obj)
+    for i in range(len(obj_prop)):
+        if obj_prop[i].area <= max_size:
+            out[label_obj == obj_prop[i].label] = obj_prop[i].label
+
+    return out
+
+
+def label_remove_small(label_obj: np.array, min_size: int):
+    """
+    Remove objects smaller than the specified size from labeled image
+
+    :param label_obj: np.array, grey scale labeled image
+    :param min_size: int
+                The smallest allowable object size
+    :return: out: np.array, grey scale labeled image with small objects removed
+    """
+    out = np.zeros_like(label_obj)
+    obj_prop = regionprops(label_obj)
+    for i in range(len(obj_prop)):
+        if obj_prop[i].area >= min_size:
+            out[label_obj == obj_prop[i].label] = obj_prop[i].label
+
+    return out
+
+
+def label_remove_low_circ(label_obj: np.array, thresh: float):
+    """
+    Remove objects whose circularity are smaller than the specified threshold from labeled image
+
+    Note: this step will also remove any objects whose size are smaller than 50
+
+    :param label_obj: np.array, grey scale labeled image
+    :param thresh: float
+                The smallest allowable circularity
+    :return: out: np.array, grey scale labeled image with small circularity objects removed
+    """
+    obj_prop = regionprops(label_obj)
+    out = np.zeros_like(label_obj, dtype=float)
+    n = 1
+    for i in obj_prop:
+        if i.area >= 50:
+            circ = (4 * math.pi * i.area) / (i.perimeter ** 2)
+            if circ > thresh:
+                out[label_obj == i.label] = n
+                n = n+1
+    return out
