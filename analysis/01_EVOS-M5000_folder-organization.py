@@ -3,10 +3,10 @@ import shutil
 from datetime import datetime
 
 # input parameters
-exp_name = '20211207_EVOS-M5000_ColoDM-Cas9_nucleofectionTest'
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20211207_nucleofection-GFPtest/"
-data_source = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20211207_nucleofection-GFPtest/"
-ch = ['GFP', 'Trans']
+exp_name = '20211210_EVOS-M5000_CRISPR-KO_nucleofectionAndLipofectionTest'
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20211210_CRISPR-KO_nucleofectionAndLipofectionTest/"
+data_source = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20211210_CRISPR-KO_nucleofectionAndLipofectionTest/"
+ch = ['DAPI', 'RFP', 'TRANS']
 
 # log all the running info
 if not os.path.exists("%slog.txt" % master_folder):
@@ -33,9 +33,13 @@ for i in range(len(ch)):
 
 f.write("moving files...\n")
 for j in files:
+    n = 0
     for i in ch:
         if i in j:
             shutil.move(("%s%s" % (data_source, j)), ("%s%s/" % (data_source, i)))
+            n = 1
+    if n == 0:
+        shutil.move(("%s%s" % (data_source, j)), ("%smerge/" % data_source))
 
 print("DONE!")
 f.write("DONE!\n\n")
