@@ -38,6 +38,18 @@ label_remove_small
 label_remove_low_circ
     FUNCTION: remove objects whose circularity are smaller than the specified threshold from labeled image
     SYNTAX:   label_remove_low_circ(label_obj: np.array, thresh: float)
+    
+label_watershed
+    FUNCTION: separate touching objects based on distance map (similar to imageJ watershed)
+    SYNTAX:   label_watershed(obj: np.array, maxima_threshold)
+
+label_resort
+    FUNCTION: re-label random labeled image into sequential labeled image
+    SYNTAX:   label_resort(label_obj: np.array)
+
+object_count
+    FUNCTION: count the number of objects in given image
+    SYNTAX:   object_count(obj: np.array)
 """
 
 
@@ -194,3 +206,63 @@ def label_remove_low_circ(label_obj: np.array, thresh: float):
                 out[label_obj == i.label] = n
                 n = n+1
     return out
+
+
+def label_watershed(obj: np.array, maxima_threshold):
+    """
+    Separate touching objects based on distance map (similar to imageJ watershed)
+
+    :param obj: np.array, 0-and-1
+    :param maxima_threshold: threshold for identify maxima
+    :return: seg: np.array, grey scale with different objects labeled with different numbers
+    """
+    _, dis = medial_axis(obj, return_distance=True)
+    maxima = extrema.h_maxima(dis, maxima_threshold)
+    # maxima_threshold for Jess data = 1
+    # maxima_threshold for Jose 60x data = 10
+    # maxima_threshold for Jose 40x data = 20
+    maxima_mask = binary_dilation(maxima)
+    for i in range(6):
+        maxima_mask = binary_dilation(maxima_mask)
+
+    label_maxima = label(maxima_mask, connectivity=2)
+    markers = label_maxima.copy()
+    markers[obj == 0] = np.amax(label_maxima) + 1
+    elevation_map = sobel(obj)
+    label_obj = segmentation.watershed(elevation_map, markers)
+    label_obj[label_obj == np.amax(label_maxima) + 1] = 0
+
+    return label_obj
+
+
+def label_resort(label_obj: np.array):
+    """
+    Re-label random labeled image into sequential labeled image.
+
+    :param label_obj: np.array, grey scale labeled image
+    :return: label_out: np.array, sorted grey scale labeled image
+    """
+    count = 1
+    label_out = np.zeros_like(label_obj)
+    for i in range(np.amax(label_obj)):
+        temp = np.zeros_like(label_obj)
+        temp[label_obj == i + 1] = 1
+        if object_count(temp) > 0:
+            label_out[label_obj == i + 1] = count
+            count = count + 1
+
+    return label_out
+
+
+def object_count(obj: np.array):
+    """
+    Count the number of objects in given image.
+
+    :param obj: np.array, 0-and-1
+    :return: count_obj: number of objects.
+    """
+    label_obj = label(obj, connectivity=1)
+    obj_prop = regionprops(label_obj)
+    count_obj = len(obj_prop)
+
+    return count_obj
