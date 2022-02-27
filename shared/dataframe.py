@@ -1,5 +1,8 @@
 import numpy as np
+import pandas as pd
 import random
+import math
+import scipy.stats as st
 
 
 """
@@ -22,12 +25,18 @@ List related:
         SYNTAX:   find_pos(value: int or float, increase_lst: list)
     
     mean_list
-        FUNCTION: calculate mean list from a list of lists, excluding 0 numbers
+        FUNCTION: calculate mean list from a list of lists and its confidence interval, excluding 0 numbers
         SYNTAX:   mean_list(lst: list)
         
     list_exclude_zero
         FUNCTION: exclude zero from list y and corresponding index in x
         SYNTAX:   list_exclude_zero(x: list, y: list)
+
+Matrix related:
+    matrix_pad_with_zeros
+        FUNCTION: pad matrix with trailing zeros
+        SYNTAX:   matrix_pad_with_zeros(mat: np.array, r1: int, r2: int)
+
 """
 
 
@@ -95,23 +104,31 @@ def find_pos(value: int or float, increase_lst: list):
 
 def mean_list(lst: list):
     """
-    Calculate mean list from a list of lists, excluding 0 numbers
+    Calculate mean list from a list of lists and its confidence interval, excluding 0 and nan numbers
 
     :param lst: list, input list
                 [[...], [...], [...], [...],...[...]]
     :return: out: list
     """
     out = []
+    out_lower = []
+    out_higher = []
     for i in range(len(lst[0])):
-        n = 0
-        s = 0
+        s = []
         for j in range(len(lst)):
-            if lst[j][i] != 0:
-                s = s + lst[j][i]
-                n = n + 1
-        out.append(s*1.0/n)
+            if (lst[j][i] != 0) & (~math.isnan(lst[j][i])):
+                s.append(lst[j][i])
+        if len(s) != 0:
+            out.append(sum(s)*1.0/len(s))
+            ci = st.t.interval(alpha=0.95, df=len(s)-1, loc=np.mean(s), scale=st.sem(s))
+            out_lower.append(ci[0])
+            out_higher.append(ci[1])
+        else:
+            out.append(0)
+            out_lower.append(0)
+            out_higher.append(0)
 
-    return out
+    return out, out_lower, out_higher
 
 
 def list_exclude_zero(x: list, y: list):
@@ -128,4 +145,24 @@ def list_exclude_zero(x: list, y: list):
         if y[i] != 0:
             x_out.append(x[i])
             y_out.append(y[i])
+
     return x_out, y_out
+
+
+def matrix_pad_with_zeros(mat: np.array, r1: int, r2: int):
+    """
+    Pad matrix with trailing zeros
+
+    :param mat: np.array, input matrix
+    :param r1: int, expanding length on first axis
+    ;param r2: int, expanding length on second axis
+    :return:
+    """
+    l1 = mat.shape[0]
+    l2 = mat.shape[1]
+    temp1 = np.zeros((l1, r2))
+    temp2 = np.zeros((r1, l2 + r2))
+    out = np.concatenate((mat, temp1), axis=1)
+    out = np.concatenate((out, temp2), axis=0)
+
+    return out
