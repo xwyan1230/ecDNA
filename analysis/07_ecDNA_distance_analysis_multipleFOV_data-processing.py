@@ -4,7 +4,7 @@ import numpy as np
 # input parameters
 exp_name = '20220204_CtrlAndJQ1'
 master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220204_CtrlAndJQ1/"
-prefix = 'JQ1'
+prefix = 'ctrl'
 interval = 0.01
 total_FOV = 20
 
@@ -12,7 +12,7 @@ data_curve = pd.DataFrame(columns=['FOV', 'nuclear', 'interval', 'density_FISH',
 
 for fov in range(total_FOV):
     print("Start analyzing FOV %s/%s..." % (fov+1, total_FOV))
-    data_r = pd.read_csv('%s%s/summary_r_%s_FOV%s.txt' % (master_folder, prefix, prefix, fov), na_values=['.'], sep='\t')
+    data_r = pd.read_csv('%sdistance_analysis/%s/summary_r_%s_FOV%s.txt' % (master_folder, prefix, prefix, fov), na_values=['.'], sep='\t')
 
     for i in range(int(max(data_r['nuclear']))):
         data_temp = data_r[data_r['nuclear'] == i + 1]
