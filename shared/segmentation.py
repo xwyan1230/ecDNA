@@ -50,6 +50,10 @@ find_organelle
 get_bg_int
     FUNCTION: measure background intensities from a given movie
     SYNTAX:   get_bg_int(pixels_tseries: list)
+
+get_mean_int_of_max_area
+    FUNCTION: get mean intensity of maximum area object
+    SYNTAX:   get_mean_int_of_max_area(props: regionprops)
 """
 
 
@@ -165,6 +169,58 @@ def nuclear_seg(img: np.array, local_factor=99, clearance_threshold=300, maxima_
     out = binary_dilation(out)
     # fill nuclei holes
     out = ndimage.binary_fill_holes(out)
+    # separate touching nuclei
+    out = obj.label_watershed(out, maxima_threshold)
+    # filter smaller objects
+    out = obj.label_remove_small(out, min_size)
+    out = obj.label_remove_large(out, max_size)
+    out = obj.label_resort(out)
+
+    return out
+
+
+def nuclear_seg1(img: np.array, local_factor=99, clearance_threshold=300, maxima_threshold=10, min_size=4000, max_size=25000):
+    """
+    Perform nuclear segmentation from a fluorescent image
+
+    tested by Paul Mischel Leica Scope
+
+    :param img: np.array
+                    fluorescent image
+    :param local_factor: int, odd number
+                    factor used to perform local thresholding
+                    for ColoDM under Paul Mischel Leica scope, 99
+    :param clearance_threshold: int
+                    threshold used to clear background
+                    default: 300
+    :param maxima_threshold: int
+                    threshold used in label_watershed
+                    for ColoDM under Paul Mischel Leica scope, 10
+    :param min_size: int
+                    minimum allowable object size
+    ;param max_size: int
+                    maximum allowable object size
+    :return: out: np.array
+                    labeled nuclear img
+    """
+    # global thresholding to determine rough location of nuclei
+    global_threshold_val = threshold_otsu(img)
+    # determine background region
+    bg = img > global_threshold_val
+    # perform local thresholding to identify nuclei
+    local = threshold_local(img, local_factor)
+    out = img > local
+    # clear background
+    out[bg == 0] = 0
+    # one round of erosion/dilation and clearance to clear background
+    out = binary_erosion(out)
+    out = binary_dilation(out, disk(4))
+    out = obj.remove_small(out, clearance_threshold)
+    # fill nuclei holes
+    out = ndimage.binary_fill_holes(out)
+    # eliminate nuclei that touching boundary
+    out = clear_border(out)
+    out = binary_erosion(out, disk(3))
     # separate touching nuclei
     out = obj.label_watershed(out, maxima_threshold)
     # filter smaller objects
@@ -424,3 +480,20 @@ def get_bg_int(pixels_tseries: list):
             bg_int_tseries.append(bg_int_temp)
 
     return bg_int_tseries
+
+
+def get_mean_int_of_max_area(props):
+    """
+    Get mean intensity of maximum area object
+
+    :param props: regionprops
+    :return:
+    """
+    max_area = 0
+    mean_int = 0
+    for i in range(len(props)):
+        if props[i].area > max_area:
+            max_area = props[i].area
+            mean_int = props[i].mean_intensity
+
+    return mean_int, max_area

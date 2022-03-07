@@ -24,6 +24,14 @@ img_local_seg
 edge_from_seg
     FUNCTION: detect edge from 0,1 image
     SYNTAX:   edge_from_seg(img: np.array)
+
+image_paste
+    FUNCTION: paste image based on reference distance
+    SYNTAX:   image_paste(paste_to_size: np.array, paste_from_img: np.array, distance: list)
+
+image_deduction
+    FUNCTION: image deduction (returns img1-img2, negative value replace as 0)
+    SYNTAX:   image_deduction(img1: np.array, img2: np.array)
 """
 
 
@@ -92,5 +100,40 @@ def edge_from_seg(img: np.array):
             if (img[m+1, n+1] == 1) & ((img[m, n] == 0)|(img[m, n+1] == 0)|(img[m, n+2] == 0)|(img[m+1, n] == 0)|
                                        (img[m+1, n+2] == 0)|(img[m+2, n] == 0)|(img[m+2, n+1] == 0)|(img[m+2, n+2] == 0)):
                 out[m+1, n+1] = 1
+
+    return out
+
+
+def image_paste(paste_to_size: np.array, paste_from_img: np.array, distance: list):
+    """
+    Paste image based on reference distance
+
+    :param paste_to_size: np.array, same size image as output
+    :param paste_from_img: np.array, image to be pasted
+    :param distance: [x,y] reference distance
+    :return:
+    """
+    paste_to_img = np.zeros_like(paste_to_size)
+    for i in range(paste_from_img.shape[0]):
+        for j in range(paste_from_img.shape[1]):
+            if paste_from_img[i][j] != 0:
+                paste_to_img[i+distance[0]][j+distance[1]] = paste_from_img[i][j]
+
+    return paste_to_img
+
+
+def image_deduction(img1: np.array, img2: np.array):
+    """
+    Image deduction (returns img1-img2, negative value replace as 0)
+
+    :param img1: np.array
+    :param img2: np.array
+    :return:
+    """
+    out = np.zeros_like(img1)
+    for i in range(len(img1)):
+        for j in range(len(img1[i])):
+            if img1[i][j] > img2[i][j]:
+                out[i][j] = img1[i][j] - img2[i][j]
 
     return out
