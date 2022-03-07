@@ -11,8 +11,8 @@ master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220204_CtrlAn
 prefix = 'ctrl_new_NW_20pos_Processed001'
 local_size = 100
 
-img_nuclear = plt.imread('%s%s/%s_s00_RAW_ch00.tif' % (master_folder, ctrl_prefix, ctrl_prefix), format=None)
-img_FISH = plt.imread('%s%s/%s_s00_RAW_ch01.tif' % (master_folder, ctrl_prefix, ctrl_prefix), format=None)
+img_nuclear = plt.imread('%s%s/%s_s00_RAW_ch00.tif' % (master_folder, prefix, prefix), format=None)
+img_FISH = plt.imread('%s%s/%s_s00_RAW_ch01.tif' % (master_folder, prefix, prefix), format=None)
 
 img_nuclear_seg = seg.nuclear_seg(img_nuclear)
 nuclear_props = regionprops(img_nuclear_seg)
