@@ -37,13 +37,15 @@ def auto_correlation(img: np.array, mask: np.array, rmax: int):
     :return:
     """
 
-    img_int = sum(sum(img*mask))
-    mask_int = sum(sum(mask))
+    img_int = np.sum(img*mask)
+    mask_int = np.sum(mask)
 
     (l1, l2) = img.shape
 
     mask_fft = np.real(np.fft.fftshift(np.real(np.fft.ifft2(np.abs(np.fft.fft2(dat.matrix_pad_with_zeros(mask, rmax, rmax))) ** 2))))
     img_fft = np.real(np.fft.fftshift(np.real(np.fft.ifft2(np.abs(np.fft.fft2(dat.matrix_pad_with_zeros(img * mask, rmax, rmax))) ** 2))))
+    mask_fft[mask_fft == 0] = 10 ** -16
+    img_fft[img_fft == 0] = 10 ** -16
 
     g1 = (mask_int ** 2)/(img_int ** 2)*img_fft/mask_fft
     gg = g1[math.floor((l1+rmax)/2+1)-rmax-1: math.floor((l1+rmax)/2+1)+rmax, math.floor((l2+rmax)/2+1)-rmax-1: math.floor((l2+rmax)/2+1)+rmax]
