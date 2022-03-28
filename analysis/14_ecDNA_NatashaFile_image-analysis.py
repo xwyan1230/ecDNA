@@ -9,12 +9,12 @@ import math
 
 # input parameters
 exp_name = '20220301_NatashaFile'
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220301_NatashaFile/"
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/211122_STM/"
 local_size = 250
 rmax = 100
-sample = 'JQ1_3'
+sample = 'STM_2_4'
 
-imstack = skio.imread("%s210921_COLODM_washout_mycFISH_JQ13hr_3.tif" % master_folder, plugin="tifffile")
+imstack = skio.imread("%s211222_COLODM_STM_slide2_4.tif" % master_folder, plugin="tifffile")
 
 data = pd.DataFrame(columns=['FOV', 'z', 'nuclear', 'nuclear_centroid', 'nuclear_area', 'nuclear_circ', 'FISH_mean_int',
                              'g_FISH', 'dg_FISH', 'g_nuclear', 'dg_nuclear'])

@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 
 # input parameters
 exp_name = '20220301_NatashaFile'
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220301_NatashaFile/"
-sample = 'DMSO_3'
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/211102_3hr_JQ1washout/"
+sample = 'JQ1_trip_2'
 
-data = pd.read_csv('%sauto_correlation_DMSO_3.txt' % master_folder, na_values=['.'], sep='\t')
+data = pd.read_csv('%sauto_correlation_JQ1_trip_2.txt' % master_folder, na_values=['.'], sep='\t')
 data['g_FISH'] = [dat.str_to_float(data['g_FISH'][i]) for i in range(len(data))]
 data['nan'] = [data['g_FISH'][i][0] for i in range(len(data))]
 data.dropna(subset=['nan'], inplace=True)

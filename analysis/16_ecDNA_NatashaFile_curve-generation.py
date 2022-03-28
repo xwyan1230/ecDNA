@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 
 # input parameters
 exp_name = '20220204_CtrlAndJQ1'
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220204_CtrlAndJQ1_zstack/"
-prefix = ['ctrl', 'JQ1']
-color = ['#FFA500', '#40E0D0']
-rmax = 60
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/211102_3hr_JQ1washout/"
+prefix = ['DMSO', 'JQ1', 'JQ1_DMSO', 'JQ1_trip']
+color = ['#FFA500', '#40E0D0', '#DA70D6', '#00CED1']
+rmax = 100
 mean_curve = []
 ci_lower = []
 ci_higher = []
