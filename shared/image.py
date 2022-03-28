@@ -2,6 +2,7 @@ import numpy as np
 from skimage.filters import threshold_otsu
 from skimage.morphology import binary_dilation, binary_erosion, disk
 import shared.objects as obj
+import random
 
 
 """
@@ -32,6 +33,10 @@ image_paste
 image_deduction
     FUNCTION: image deduction (returns img1-img2, negative value replace as 0)
     SYNTAX:   image_deduction(img1: np.array, img2: np.array)
+
+logical_ellipse
+    FUNCTION: draw logical ellipse on given image
+    SYNTAX:   logical_ellipse(img: np.array, centerX: int, centerY: int, a: int, b: int, avg=1)
 """
 
 
@@ -135,5 +140,51 @@ def image_deduction(img1: np.array, img2: np.array):
         for j in range(len(img1[i])):
             if img1[i][j] > img2[i][j]:
                 out[i][j] = img1[i][j] - img2[i][j]
+
+    return out
+
+
+def logical_ellipse(img: np.array, centerX: int, centerY: int, a: int, b: int, avg=1):
+    """
+    Draw logical ellipse on given image
+
+    :param img: np.array, input image
+    :param centerX: center coordinate X
+    :param centerY: center coordinate Y
+    :param a: r on X axis
+    :param b: r on b axis
+    :param avg: intensity value for the ellipse, default=1
+    :return:
+    """
+    out = img.copy()
+    for i in range(len(img)):
+        for j in range(len(img[0])):
+            if (i-centerX)**2/a**2 + (j-centerY)**2/b**2 <= 1:
+                out[i][j] = avg
+
+    return out
+
+
+def logical_dot_sample(img: np.array, mask: np.array, n: int, avg=1):
+    """
+    Create n randomly selected dot within certain region
+
+    :param img: np.array, input image
+    :param mask: np.array, mask image to determine the region
+    :param n: int, number of dots
+    :param avg: intensity value for the ellipse, default=1
+    :return:
+    """
+    out = img.copy()
+    mask_int = np.sum(mask)
+    temp_lst = list(np.arange(mask_int))
+    target_lst = random.sample(temp_lst, n)
+    k = 0
+    for i in range(len(img)):
+        for j in range(len(img[0])):
+            if mask[i][j] == 1:
+                if k in target_lst:
+                    out[i][j] = avg
+                k = k+1
 
     return out
