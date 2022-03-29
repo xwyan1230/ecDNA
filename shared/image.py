@@ -3,6 +3,11 @@ from skimage.filters import threshold_otsu
 from skimage.morphology import binary_dilation, binary_erosion, disk
 import shared.objects as obj
 import random
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import numpy
+import storm_analysis.sa_library.datareader as datareader
+import storm_analysis.sa_library.sa_h5py as saH5Py
 
 
 """
@@ -37,6 +42,18 @@ image_deduction
 logical_ellipse
     FUNCTION: draw logical ellipse on given image
     SYNTAX:   logical_ellipse(img: np.array, centerX: int, centerY: int, a: int, b: int, avg=1)
+
+overlayImage
+    FUNCTION: create an image of a frame with the localizations overlaid
+    SYNTAX:   overlayImage(movie_name, locs_name, frame_number, sx=16, sy=16)
+
+scatter_dot_from_hdf5
+    FUNCTION: scatter dot based on hdf5 file
+    SYNTAX:   scatter_dot_from_hdf5(img: np.array, locs_name, frame_number=0)
+
+display_dot
+    FUNCTION: display all the 1 in an image (for visualization)
+    SYNTAX:   display_dot(movie_name, img: np.array, frame_number=0)
 """
 
 
@@ -188,3 +205,118 @@ def logical_dot_sample(img: np.array, mask: np.array, n: int, avg=1):
                 k = k+1
 
     return out
+
+
+def overlayImage(movie_name, locs_name, frame_number, save_path, save_name, sx=16, sy=16):
+    """
+    Create an image of a frame with the localizations overlaid.
+
+    movie_name - The name of the movie file.
+    locs_name - The name of the localizations HDF5 file.
+    frame_number - Which frame to examine.
+    sx - Figure x size in inches.
+    sy - Figure y size in inches.
+    """
+    frame = datareader.inferReader(movie_name).loadAFrame(frame_number).astype(numpy.float64)
+    with saH5Py.SAH5Py(locs_name) as h5:
+        locs = h5.getLocalizationsInFrame(frame_number)
+
+    frame = frame - numpy.min(frame)
+    frame = frame / numpy.max(frame)
+
+    fig = plt.figure(figsize=(sx, sy))
+    ax = fig.add_subplot(1, 1, 1)
+    ax.imshow(frame, interpolation='nearest', cmap="gray")
+    if bool(locs):
+        for i in range(locs["x"].size):
+            width = 2
+            height = 2
+            # if "xsigma" in locs:
+            #    width = height = 5.0*locs["xsigma"][i]
+            # if "ysigma" in locs:
+            #    height = 5.0*locs["ysigma"][i]
+            ellipse = patches.Ellipse((locs["x"][i], locs["y"][i]), width, height, facecolor='none', edgecolor='g',
+                                      linewidth=2)
+            ax.add_artist(ellipse)
+
+        # ax.scatter(locs["x"], locs["y"], s = 200,
+        ax.set_title("Overlay Image")
+
+        plt.savefig('%s/%s.pdf' % (save_path, save_name))
+        plt.show()
+
+
+def scatter_dot_from_hdf5(img: np.array, mask: np.array, locs_name, frame_number=0):
+    """
+    Scatter dot based on hdf5 file
+
+    :param img: np.array, input image
+    :param mask: np.array, mask image
+    :param locs_name: hdf5 file, indicating peak location
+    :param frame_number: int, default=0
+    :return:
+    """
+    with saH5Py.SAH5Py(locs_name) as h5:
+        locs = h5.getLocalizationsInFrame(frame_number)
+
+    out = img.copy()
+
+    for i in range(locs["x"].size):
+        x = round(locs['y'][i]) if round(locs['y'][i]) != 500 else 499
+        y = round(locs['x'][i]) if round(locs['x'][i]) != 500 else 499
+        if mask[x][y] == 1:
+            out[x][y] = 1
+
+    return out
+
+
+def display_dot(movie_name, img: np.array, frame_number=0):
+    """
+    display all the 1 in an image (for visualization)
+    :param movie_name: .tif
+    :param img: np.array, binary image
+    :param frame_number: int, default=0
+    :return:
+    """
+    frame = datareader.inferReader(movie_name).loadAFrame(frame_number).astype(numpy.float64)
+    frame = frame - numpy.min(frame)
+    frame = frame / numpy.max(frame)
+
+    fig = plt.figure(figsize=(16, 16))
+    ax = fig.add_subplot(1, 1, 1)
+    ax.imshow(frame, interpolation='nearest', cmap="gray")
+
+    for i in range(len(img)):
+        for j in range(len(img[0])):
+            if img[i][j] == 1:
+                ellipse = patches.Ellipse((j, i), 2, 2, facecolor='none', edgecolor='g', linewidth=2)
+                ax.add_artist(ellipse)
+
+    plt.show()
+
+
+def xy_lst_within_region(mask: np.array, locs_name, frame_number=0):
+    """
+    Generate xy list within mask region from hdf5 file
+
+    :param mask: np.array, mask image
+    :param locs_name: hdf5 file
+    :param frame_number: int, default=0
+    :return:
+    """
+    with saH5Py.SAH5Py(locs_name) as h5:
+        locs = h5.getLocalizationsInFrame(frame_number)
+
+    out_x = []
+    out_y = []
+    for i in range(len(locs['x'])):
+        x = round(locs['y'][i]) if round(locs['y'][i]) != 500 else 499
+        y = round(locs['x'][i]) if round(locs['x'][i]) != 500 else 499
+        if mask[x][y] == 1:
+            out_x.append(-locs['y'][i])
+            out_y.append(locs['x'][i])
+
+    X = np.array([[out_x[i], out_y[i]] for i in range(len(out_x))])
+    labels_true = [1] * len(out_x)
+
+    return X, labels_true
