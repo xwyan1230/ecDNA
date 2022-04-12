@@ -243,7 +243,7 @@ def overlayImage(movie_name, locs_name, frame_number, save_path, save_name, sx=1
         ax.set_title("Overlay Image")
 
         plt.savefig('%s/%s.pdf' % (save_path, save_name))
-        plt.show()
+        plt.close()
 
 
 def scatter_dot_from_hdf5(img: np.array, mask: np.array, locs_name, frame_number=0):
@@ -260,12 +260,14 @@ def scatter_dot_from_hdf5(img: np.array, mask: np.array, locs_name, frame_number
         locs = h5.getLocalizationsInFrame(frame_number)
 
     out = img.copy()
+    print(img.shape)
 
-    for i in range(locs["x"].size):
-        x = round(locs['y'][i]) if round(locs['y'][i]) != 500 else 499
-        y = round(locs['x'][i]) if round(locs['x'][i]) != 500 else 499
-        if mask[x][y] == 1:
-            out[x][y] = 1
+    if bool(locs):
+        for i in range(locs["x"].size):
+            x = round(locs['y'][i]) if round(locs['y'][i]) < img.shape[0] else img.shape[0]-1
+            y = round(locs['x'][i]) if round(locs['x'][i]) < img.shape[1] else img.shape[1]-1
+            if mask[x][y] == 1:
+                out[x][y] = 1
 
     return out
 

@@ -62,7 +62,6 @@ for i in range(len(nuclear_props)):
     # img.display_dot('%stemp%s.tiff' % (master_folder, i), FISH_daostorm)
 
     _, r, g_FISH, dg_FISH = mat.auto_correlation(FISH_daostorm, nuclear_seg, rmax)
-    print(g_FISH)
 
     data.loc[len(data.index)] = [i, g_FISH]
 
