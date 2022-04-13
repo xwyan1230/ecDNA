@@ -32,8 +32,12 @@ edge_from_seg
     SYNTAX:   edge_from_seg(img: np.array)
 
 image_paste
-    FUNCTION: paste image based on reference distance
+    FUNCTION: paste image based on reference distance to empty image
     SYNTAX:   image_paste(paste_to_size: np.array, paste_from_img: np.array, distance: list)
+
+image_paste_fix_value
+    FUNCTION: paste image based on reference distance for certain fixed value to a defined image
+    SYNTAX:   image_paste_fix_value(paste_to_image: np.array, paste_from_img: np.array, distance: list, value: int)
 
 image_deduction
     FUNCTION: image deduction (returns img1-img2, negative value replace as 0)
@@ -128,7 +132,7 @@ def edge_from_seg(img: np.array):
 
 def image_paste(paste_to_size: np.array, paste_from_img: np.array, distance: list):
     """
-    Paste image based on reference distance
+    Paste image based on reference distance to empty image
 
     :param paste_to_size: np.array, same size image as output
     :param paste_from_img: np.array, image to be pasted
@@ -140,6 +144,25 @@ def image_paste(paste_to_size: np.array, paste_from_img: np.array, distance: lis
         for j in range(paste_from_img.shape[1]):
             if paste_from_img[i][j] != 0:
                 paste_to_img[i+distance[0]][j+distance[1]] = paste_from_img[i][j]
+
+    return paste_to_img
+
+
+def image_paste_fix_value(paste_to_image: np.array, paste_from_img: np.array, distance: list, value: int):
+    """
+        Paste image based on reference distance for certain fixed value to a defined image
+
+        :param paste_to_image: np.array, image gets pasted to
+        :param paste_from_img: np.array, image to be pasted (only shape is pasted)
+        :param distance: [x,y] reference distance
+        :param value: fixed value
+        :return:
+        """
+    paste_to_img = paste_to_image.copy()
+    for i in range(paste_from_img.shape[0]):
+        for j in range(paste_from_img.shape[1]):
+            if paste_from_img[i][j] != 0:
+                paste_to_img[i + distance[0]][j + distance[1]] = value
 
     return paste_to_img
 
