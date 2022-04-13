@@ -6,8 +6,10 @@ from scipy import ndimage
 from skimage import segmentation
 from skimage.morphology import extrema, binary_dilation, binary_erosion, disk
 from shared.objects import remove_large, remove_small
-from skimage.measure import label, regionprops_table
+from skimage.measure import label, regionprops_table, regionprops
 import pandas as pd
+import shared.image as img
+import napari
 
 
 """
@@ -54,6 +56,10 @@ get_bg_int
 get_mean_int_of_max_area
     FUNCTION: get mean intensity of maximum area object
     SYNTAX:   get_mean_int_of_max_area(props: regionprops)
+
+obj_to_convex
+    FUNCTION: transform objects into its corresponding convex objects
+    SYNTAX:   obj_to_convex(pixels: np.array)
 """
 
 
@@ -497,3 +503,22 @@ def get_mean_int_of_max_area(props):
             mean_int = props[i].mean_intensity
 
     return mean_int, max_area
+
+
+def obj_to_convex(pixels: np.array):
+    """
+    Transform objects into its corresponding convex objects
+    :param pixels: np.array, labeled image
+    :return:
+    """
+    out = np.zeros_like(pixels)
+    props = regionprops(pixels)
+    for i in range(len(props)):
+        convex_local = props[i].convex_image
+        centroid = props[i].centroid
+        centroid_convex = regionprops(label(convex_local))[0].centroid
+        out = img.image_paste_fix_value(out, convex_local, [int(centroid[0] - centroid_convex[0]),
+                                                            int(centroid[1] - centroid_convex[1])], i)
+
+    return out
+
