@@ -60,6 +60,14 @@ get_mean_int_of_max_area
 obj_to_convex
     FUNCTION: transform objects into its corresponding convex objects
     SYNTAX:   obj_to_convex(pixels: np.array)
+    
+filter_solidity
+    FUNCTION: filter labeled objects based on solidity
+    SYNTAX: filter_solidity(pixels: np.array, threshold=0.9)
+
+filter_mean_int
+    FUNCTION: filter labeled objects based on mean sub_obj intensity
+    SYNTAX: filter_mean_int(img_obj: np.array, img_sub_obj: np.array, img: np.array, threshold: float)
 """
 
 
@@ -505,20 +513,69 @@ def get_mean_int_of_max_area(props):
     return mean_int, max_area
 
 
-def obj_to_convex(pixels: np.array):
+def obj_to_convex(img_obj: np.array):
     """
     Transform objects into its corresponding convex objects
-    :param pixels: np.array, labeled image
+    :param img_obj: np.array, labeled image
     :return:
     """
-    out = np.zeros_like(pixels)
-    props = regionprops(pixels)
+    out = np.zeros_like(img_obj)
+    props = regionprops(img_obj)
     for i in range(len(props)):
         convex_local = props[i].convex_image
         centroid = props[i].centroid
         centroid_convex = regionprops(label(convex_local))[0].centroid
         out = img.image_paste_fix_value(out, convex_local, [int(centroid[0] - centroid_convex[0]),
                                                             int(centroid[1] - centroid_convex[1])], i)
+
+    return out
+
+
+def filter_solidity(img_obj: np.array, threshold=0.9):
+    """
+    Filter labeled objects based on solidity
+    :param img_obj: np.array, labeled image
+    :param threshold: float, smaller than this number will be excluded
+    :return:
+    """
+    out = np.zeros_like(img_obj)
+    props = regionprops(img_obj)
+    j = 1
+    for i in range(len(props)):
+        if props[i].solidity >= threshold:
+            out[img_obj == props[i].label] = j
+            j = j+1
+
+    return out
+
+
+def filter_mean_int(img_obj: np.array, img_sub_obj: np.array, img: np.array, threshold: float):
+    """
+    Filter labeled objects based on mean sub_obj intensity
+    :param img_obj: np.array, labeled image, first tier (for example: nuclear segmentation)
+    :param img_sub_obj: np.array, labeled image, second tier
+            (for example: sub-nuclear segmentation, like ecDNA segmentation)
+    :param img: np.array, fluorescent image for measuring intensity
+    :param threshold: float, smaller than this number will be excluded
+    :return:
+    """
+    out = np.zeros_like(img_obj)
+    props = regionprops(img_obj)
+    j = 1
+    for i in range(len(props)):
+        temp = img_sub_obj.copy()
+        temp[img_obj != props[i].label] = 0
+        props_temp = regionprops(label(temp), img)
+        sum_intensity = 0
+        sum_area = 0
+        sub_obj_mean_intensity = 0
+        for m in range(len(props_temp)):
+            sum_intensity = sum_intensity + props_temp[m].mean_intensity*props_temp[m].area
+            sum_area = sum_area + props_temp[m].area
+            sub_obj_mean_intensity = sum_intensity*1.0/sum_area if sum_area != 0 else 0
+        if sub_obj_mean_intensity >= threshold:
+            out[img_obj == props[i].label] = j
+            j = j+1
 
     return out
 
