@@ -20,6 +20,7 @@ for fov in range(total_fov):
     # load images
     img_nuclear = plt.imread('%s/%s_s%s_ch00.tif' % (master_folder, prefix, fov), format=None)
     img_FISH = plt.imread('%s/%s_s%s_ch02.tif' % (master_folder, prefix, fov), format=None)
+    img_MYC = plt.imread('%s/%s_s%s_ch01.tif' % (master_folder, prefix, fov), format=None)
 
     # nuclear segmentation
     print("Start segmentation...")
@@ -44,11 +45,12 @@ for fov in range(total_fov):
     # props
     print("Start analyzing features...")
     data = pd.DataFrame(columns=['FOV', 'nuclear_label', 'nuclear_centroid', 'nuclear_area', 'nuclear_major_axis',
-                                 'nuclear_minor_axis', 'nuclear_axis_ratio', 'nuclear_circularity', 'nuclear_eccentricity',
-                                 'nuclear_FISH_mean_intensity', 'nuclear_total_intensity', 'ecDNA_number', 'ecDNA_area',
-                                 'ecDNA_mean_area', 'ecDNA_max_area', 'ecDNA_mean_int', 'ecDNA_intensity',
-                                 'ecDNA_total_intensity', 'ecDNA_participating_coefficient', 'ecDNA_centroid',
-                                 'ecDNA_localization_from_centroid', 'ecDNA_distance_from_centroid'])
+                                 'nuclear_minor_axis', 'nuclear_axis_ratio', 'nuclear_circularity',
+                                 'nuclear_eccentricity', 'nuclear_FISH_mean_intensity', 'nuclear_total_intensity',
+                                 'ecDNA_number', 'ecDNA_area', 'ecDNA_mean_area', 'ecDNA_max_area', 'ecDNA_mean_int',
+                                 'ecDNA_intensity', 'ecDNA_total_intensity', 'ecDNA_participating_coefficient',
+                                 'ecDNA_centroid', 'ecDNA_localization_from_centroid', 'ecDNA_distance_from_centroid',
+                                 'MYC_mean_intensity', 'MYC_total_intensity'])
 
     props = regionprops(img_nuclear_seg_convex, img_FISH)
     for i in range(len(props)):
@@ -81,11 +83,16 @@ for fov in range(total_fov):
             [(ecDNA_localization_from_centroid[j][0]**2+ecDNA_localization_from_centroid[j][1]**2)**0.5
              for j in range(ecDNA_number)]
 
+        MYC_props = regionprops(img_nuclear_seg_convex, img_MYC)
+        MYC_mean_intensity = MYC_props[i].mean_intensity
+        MYC_total_intensity = nuclear_area * MYC_mean_intensity
+
         data.loc[len(data.index)] = \
-            [fov, nuclear_label, nuclear_centroid, nuclear_area, nuclear_major_axis, nuclear_minor_axis, nuclear_axis_ratio,
-             nuclear_circularity, nuclear_eccentricity, nuclear_FISH_mean_intensity, nuclear_total_intensity, ecDNA_number,
-             ecDNA_area, ecDNA_mean_area, ecDNA_max_area, ecDNA_mean_int, ecDNA_intensity, ecDNA_total_intensity,
-             ecDNA_participating_coefficient, ecDNA_centroid, ecDNA_localization_from_centroid, ecDNA_distance_from_centroid]
+            [fov, nuclear_label, nuclear_centroid, nuclear_area, nuclear_major_axis, nuclear_minor_axis,
+             nuclear_axis_ratio, nuclear_circularity, nuclear_eccentricity, nuclear_FISH_mean_intensity,
+             nuclear_total_intensity, ecDNA_number, ecDNA_area, ecDNA_mean_area, ecDNA_max_area, ecDNA_mean_int,
+             ecDNA_intensity, ecDNA_total_intensity, ecDNA_participating_coefficient, ecDNA_centroid,
+             ecDNA_localization_from_centroid, ecDNA_distance_from_centroid, MYC_mean_intensity, MYC_total_intensity]
 
 data.to_csv('%s%s.txt' % (master_folder, sample), index=False, sep='\t')
 
