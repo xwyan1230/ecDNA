@@ -9,10 +9,18 @@ import math
 import numpy as np
 
 # input parameters
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/DM_singleZ/"
-prefix = '20220407_DMandHSR_DM_singleZ'
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/HSR_singleZ/"
+prefix = '20220407_DMandHSR_HSR_singleZ'
 total_fov = 6
-sample = 'DM'
+sample = 'HSR'
+
+data = pd.DataFrame(columns=['FOV', 'nuclear_label', 'nuclear_centroid', 'nuclear_area', 'nuclear_major_axis',
+                                 'nuclear_minor_axis', 'nuclear_axis_ratio', 'nuclear_circularity',
+                                 'nuclear_eccentricity', 'nuclear_FISH_mean_intensity', 'nuclear_total_intensity',
+                                 'ecDNA_number', 'ecDNA_area', 'ecDNA_mean_area', 'ecDNA_max_area', 'ecDNA_mean_int',
+                                 'ecDNA_intensity', 'ecDNA_total_intensity', 'ecDNA_participating_coefficient',
+                                 'ecDNA_centroid', 'ecDNA_localization_from_centroid', 'ecDNA_distance_from_centroid',
+                                 'MYC_mean_intensity', 'MYC_total_intensity'])
 
 for fov in range(total_fov):
     print("Start analyzing FOV %s/%s" % (fov+1, total_fov))
@@ -44,13 +52,6 @@ for fov in range(total_fov):
 
     # props
     print("Start analyzing features...")
-    data = pd.DataFrame(columns=['FOV', 'nuclear_label', 'nuclear_centroid', 'nuclear_area', 'nuclear_major_axis',
-                                 'nuclear_minor_axis', 'nuclear_axis_ratio', 'nuclear_circularity',
-                                 'nuclear_eccentricity', 'nuclear_FISH_mean_intensity', 'nuclear_total_intensity',
-                                 'ecDNA_number', 'ecDNA_area', 'ecDNA_mean_area', 'ecDNA_max_area', 'ecDNA_mean_int',
-                                 'ecDNA_intensity', 'ecDNA_total_intensity', 'ecDNA_participating_coefficient',
-                                 'ecDNA_centroid', 'ecDNA_localization_from_centroid', 'ecDNA_distance_from_centroid',
-                                 'MYC_mean_intensity', 'MYC_total_intensity'])
 
     props = regionprops(img_nuclear_seg_convex, img_FISH)
     for i in range(len(props)):
