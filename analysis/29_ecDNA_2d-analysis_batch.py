@@ -28,7 +28,7 @@ data = pd.DataFrame(columns=['FOV', 'nuclear_label', 'nuclear_centroid', 'nuclea
                              'ecDNA_intensity', 'ecDNA_total_intensity', 'ecDNA_participating_coefficient',
                              'ecDNA_centroid', 'ecDNA_localization_from_centroid', 'ecDNA_distance_from_centroid',
                              'ecDNA_distance_from_edge',
-                             'MYC_mean_intensity', 'MYC_total_intensity', 'g', 'dg'])
+                             'MYC_mean_intensity', 'MYC_total_intensity', 'g', 'dg', 'radial_intensity'])
 
 for fov in range(total_fov):
     print("Start analyzing FOV %s/%s" % (fov+1, total_fov))
@@ -104,9 +104,6 @@ for fov in range(total_fov):
         MYC_mean_intensity = MYC_props[i].mean_intensity
         MYC_total_intensity = nuclear_area * MYC_mean_intensity
 
-        # radial distribution
-        
-
         # auto-correlation
         position = img.img_local_position(img_nuclear_seg_convex, nuclear_centroid, local_size)
         nuclear_seg = img.img_local_seg(img_nuclear_seg_convex, position, i + 1)
@@ -129,6 +126,25 @@ for fov in range(total_fov):
 
         _, r, g, dg = mat.auto_correlation(img_dot, nuclear_seg, rmax)
 
+        # radial distribution
+        radial_intensity = []
+        local_nuclear_props = regionprops(label(nuclear_seg))
+        local_nuclear_centroid = local_nuclear_props[0].centroid
+        for m in range(len(nuclear_seg)):
+            for n in range(len(nuclear_seg[0])):
+                if nuclear_seg[m][n] != 0:
+                    pixel_localization_from_centroid = tuple(np.array([m, n]) - np.array(local_nuclear_centroid))
+                    pixel_distance_from_centroid = \
+                        (pixel_localization_from_centroid[0]**2 + pixel_localization_from_centroid[1]**2)**0.5
+                    _, distance_map_temp = medial_axis(nuclear_seg, return_distance=True)
+                    pixel_distance_from_edge = distance_map_temp[m][n]
+                    pixel_relative_r = \
+                        pixel_distance_from_centroid/(pixel_distance_from_edge+pixel_distance_from_centroid)
+                    pixel_FISH_intensity = FISH[m][n]
+                    radial_intensity_temp = [pixel_localization_from_centroid, pixel_distance_from_centroid,
+                                             pixel_distance_from_edge, pixel_relative_r, pixel_FISH_intensity]
+                    radial_intensity.append(radial_intensity_temp)
+
         data.loc[len(data.index)] = \
             [fov, nuclear_label, nuclear_centroid, nuclear_area, nuclear_major_axis, nuclear_minor_axis,
              nuclear_axis_ratio, nuclear_circularity, nuclear_eccentricity, nuclear_FISH_mean_intensity,
@@ -137,7 +153,7 @@ for fov in range(total_fov):
              ecDNA_intensity, ecDNA_total_intensity, ecDNA_participating_coefficient, ecDNA_centroid,
              ecDNA_localization_from_centroid, ecDNA_distance_from_centroid, ecDNA_distance_from_edge,
              MYC_mean_intensity, MYC_total_intensity,
-             g, dg]
+             g, dg, radial_intensity]
 
 data.to_csv('%s%s.txt' % (master_folder, sample), index=False, sep='\t')
 
