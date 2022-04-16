@@ -100,6 +100,7 @@ for fov in range(total_fov):
         position = img.img_local_position(img_nuclear_seg_convex, nuclear_centroid, local_size)
         nuclear_seg = img.img_local_seg(img_nuclear_seg_convex, position, i + 1)
         FISH = img_FISH[position[0]:position[1], position[2]:position[3]]
+        plt.imsave('%sFISH_fov%s_i%s.tiff' % (master_folder, fov, i), FISH)
         vector = []
         vector_cum_weight = []
         weight = 0

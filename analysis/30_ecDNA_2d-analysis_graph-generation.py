@@ -37,6 +37,7 @@ plt.savefig('%s/heatmap.pdf' % master_folder)
 plt.close()"""
 
 # features-number (pyplot probability)
+
 """features = ['nuclear_area', 'nuclear_major_axis', 'nuclear_minor_axis', 'nuclear_axis_ratio', 'nuclear_circularity',
             'nuclear_eccentricity', 'nuclear_FISH_mean_intensity', 'nuclear_total_intensity', 'ecDNA_number',
             'ecDNA_total_area', 'area_ratio', 'ecDNA_mean_area', 'ecDNA_max_area', 'ecDNA_total_intensity',
@@ -114,7 +115,7 @@ for i in features:
 
 # features-list (seaborn)
 
-data_DM['sample'] = ['DM'] * len(data_DM)
+"""data_DM['sample'] = ['DM'] * len(data_DM)
 data_HSR['sample'] = ['HSR'] * len(data_HSR)
 
 features = ['ecDNA_area', 'ecDNA_mean_int', 'ecDNA_intensity', 'ecDNA_distance_from_centroid']
@@ -142,7 +143,7 @@ for i in features:
     # ax1 = sns.histplot(data, x='MYC_total_intensity', hue='sample', multiple='dodge', stat='probability', bins=20)
     ax1 = sns.histplot(temp, x=i, hue='sample', bins=20, kde=True)
     plt.savefig('%sfeature_seaborn_%s.pdf' % (master_folder, i))
-    plt.close()
+    plt.close()"""
 
 # features comparison
 # note, number needs to be similar between sample, otherwise add in random sampling step
@@ -155,7 +156,7 @@ features = ['nuclear_area', 'nuclear_major_axis', 'nuclear_minor_axis', 'nuclear
             'nuclear_eccentricity', 'nuclear_FISH_mean_intensity', 'nuclear_total_intensity', 'ecDNA_number',
             'ecDNA_total_area', 'area_ratio', 'ecDNA_mean_area', 'ecDNA_max_area', 'ecDNA_total_intensity',
             'ecDNA_participating_coefficient', 'MYC_mean_intensity', 'MYC_total_intensity']
-target_feature = 'MYC_mean_intensity'
+target_feature = 'MYC_total_intensity'
 sns.set_palette(sns.color_palette(colors))
 for i in features:
     if i != target_feature:
@@ -220,4 +221,23 @@ plt.legend()
 plt.ylim([-0.5, 10.5])
 plt.savefig('%s/auto_correlation_DM.pdf' % master_folder)
 plt.close()"""
+
+# auto correlation vs intensity
+data_DM['sample'] = ['DM'] * len(data_DM)
+data_HSR['sample'] = ['HSR'] * len(data_HSR)
+
+data_DM['g'] = [dat.str_to_float(data_DM['g'][i]) for i in range(len(data_DM))]
+data_HSR['g'] = [dat.str_to_float(data_HSR['g'][i]) for i in range(len(data_HSR))]
+
+data = pd.concat([data_HSR, data_DM], axis=0, ignore_index=True)
+data['g_value'] = [(data['g'][i][1] + data['g'][i][2] + data['g'][i][3] + data['g'][i][4] + data['g'][i][5])*0.2
+                   for i in range(len(data))]
+data['MYC_intensity/FISH_intensity'] = data['MYC_total_intensity']/data['nuclear_total_intensity']
+
+data_select = data[(data['nuclear_FISH_mean_intensity'] > 7500) & (data['nuclear_FISH_mean_intensity'] < 10000)]
+print(len(data_select))
+sns.set_palette(sns.color_palette(colors))
+ax1 = sns.jointplot(data=data, x='g_value', y='MYC_intensity/FISH_intensity', hue='sample')
+plt.savefig('%scomparison_of_g_value_vs_intensity_residue.pdf' % master_folder)
+plt.close()
 
