@@ -37,6 +37,11 @@ Matrix related:
         FUNCTION: pad matrix with trailing zeros
         SYNTAX:   matrix_pad_with_zeros(mat: np.array, r1: int, r2: int)
 
+Dataframe related:
+    radial_distribution
+        FUNCTION: analyze feature_y distribution based on feature_x binning
+        SYNTAX:   radial_distribution(df: pd.DataFrame, feature_x, feature_y, interval: float, feature_max: float)
+
 """
 
 
@@ -164,5 +169,31 @@ def matrix_pad_with_zeros(mat: np.array, r1: int, r2: int):
     temp2 = np.zeros((r1, l2 + r2))
     out = np.concatenate((mat, temp1), axis=1)
     out = np.concatenate((out, temp2), axis=0)
+
+    return out
+
+
+def radial_distribution(df: pd.DataFrame, feature_x, feature_y, interval: float, feature_max: float):
+    """
+    Analyze feature_y distribution based on feature_x binning
+
+    :param df: pd.DataFamre, including column of feature_x and feature_y
+    :param feature_x: string
+    :param feature_y: string
+    :param interval: float, bin size
+    :param feature_max: float, maximum for analysis, number larger than maximum number will be binned in the last bin
+    :return:
+    """
+    out = []
+    mean_feature_y = sum(df[feature_y])/len(df)
+    for i in np.arange(0, feature_max, interval):
+        if feature_max - i <= interval:
+            temp = df[df[feature_x] >= i]
+        else:
+            temp = df[(df[feature_x] >= i) & (df[feature_x] < i+interval)]
+        if len(temp) != 0:
+            out.append(temp[feature_y].mean()/mean_feature_y)
+        else:
+            out.append(0)
 
     return out
