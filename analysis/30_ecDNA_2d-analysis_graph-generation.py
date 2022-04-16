@@ -233,11 +233,24 @@ data = pd.concat([data_HSR, data_DM], axis=0, ignore_index=True)
 data['g_value'] = [(data['g'][i][1] + data['g'][i][2] + data['g'][i][3] + data['g'][i][4] + data['g'][i][5])*0.2
                    for i in range(len(data))]
 data['MYC_intensity/FISH_intensity'] = data['MYC_total_intensity']/data['nuclear_total_intensity']
+# data.to_csv('%sprocessed.txt' % master_folder, index=False, sep='\t')
 
-data_select = data[(data['nuclear_FISH_mean_intensity'] > 7500) & (data['nuclear_FISH_mean_intensity'] < 10000)]
-print(len(data_select))
 sns.set_palette(sns.color_palette(colors))
 ax1 = sns.jointplot(data=data, x='g_value', y='MYC_intensity/FISH_intensity', hue='sample')
-plt.savefig('%scomparison_of_g_value_vs_intensity_residue.pdf' % master_folder)
+#plt.savefig('%scomparison_of_g_value_vs_intensity_residue.pdf' % master_folder)
 plt.close()
+
+features = ['nuclear_area', 'nuclear_major_axis', 'nuclear_minor_axis', 'nuclear_axis_ratio', 'nuclear_circularity',
+            'nuclear_eccentricity', 'nuclear_FISH_mean_intensity', 'nuclear_total_intensity', 'ecDNA_number',
+            'ecDNA_total_area', 'area_ratio', 'ecDNA_mean_area', 'ecDNA_max_area', 'ecDNA_total_intensity',
+            'ecDNA_participating_coefficient', 'MYC_mean_intensity', 'MYC_total_intensity']
+target_feature = 'g_value'
+sns.set_palette(sns.color_palette(colors))
+for i in features:
+    if i != target_feature:
+        # ax1 = sns.histplot(data, x='MYC_total_intensity', y='ecDNA_total_intensity', hue='sample', multiple='dodge',
+        # stat='probability', bins=20)
+        ax1 = sns.jointplot(data=data, x=target_feature, y=i, hue='sample')
+        plt.savefig('%scomparison_of_%s_vs_%s.pdf' % (master_folder, target_feature, i))
+        plt.close()
 
