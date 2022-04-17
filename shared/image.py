@@ -58,6 +58,15 @@ scatter_dot_from_hdf5
 display_dot
     FUNCTION: display all the 1 in an image (for visualization)
     SYNTAX:   display_dot(movie_name, img: np.array, frame_number=0)
+
+distance_map_from_point
+    FUNCTION: generate distance map from point for given image
+    SYNTAX:   distance_map_from_point(img: np.array, point: tuple)
+
+radial_distribution_from_distance_map
+    FUNCTION: calculate radial distribution from distance map
+    SYNTAX:   radial_distribution_from_distance_map(img_seg: np.array, img_distance_map: np.array, img_feature: 
+              np.array, interval: float, feature_max: float)
 """
 
 
@@ -345,3 +354,52 @@ def xy_lst_within_region(mask: np.array, locs_name, frame_number=0):
     labels_true = [1] * len(out_x)
 
     return X, labels_true
+
+
+def distance_map_from_point(img: np.array, point: tuple):
+    """
+    Generate distance map from point for given image
+
+    :param img: np.array, input image
+    :param point: given point
+    :return:
+    """
+    p = [round(point[0]), round(point[1])]
+    image_shape = [len(img), len(img[0])]
+    ydis = np.array([np.arange(-p[0], image_shape[0] - p[0], 1)]).transpose() * np.ones(image_shape[1])
+    xdis = np.array([np.ones(image_shape[0])]).transpose() * np.arange(-p[1], image_shape[1] - p[1], 1)
+    out = (ydis * ydis + xdis * xdis)**0.5
+
+    return out
+
+
+def radial_distribution_from_distance_map(img_seg: np.array, img_distance_map: np.array, img_feature: np.array,
+                                          interval: float, feature_max: float):
+    """
+    Calculate radial distribution from distance map
+
+    :param img_seg: np.array, 0-1 binary image, segmentation image
+    :param img_distance_map: np.array, distance map
+    :param img_feature: np.array, feature image, for example: intensity image
+    :param interval: float, bin size
+    :param feature_max: float, maximum for analysis, number larger than maximum number will be binned in the last bin
+    :return:
+    """
+    out = []
+    feature_seg = img_feature.copy()
+    feature_seg[img_seg == 0] = 0
+    mean_feature = np.sum(feature_seg)/np.sum(img_seg)
+    for i in np.arange(0, feature_max, interval):
+        seg_temp = img_seg.copy()
+        feature_temp = feature_seg.copy()
+        seg_temp[img_distance_map < i] = 0
+        feature_temp[img_distance_map < i] = 0
+        if feature_max - i > interval:
+            seg_temp[img_distance_map >= (i+interval)] = 0
+            feature_temp[img_distance_map >= (i+interval)] = 0
+            if np.sum(seg_temp) != 0:
+                out.append(np.sum(feature_temp)/np.sum(seg_temp))
+            else:
+                out.append(0)
+
+    return out
