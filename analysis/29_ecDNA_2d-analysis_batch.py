@@ -10,13 +10,14 @@ import numpy as np
 import shared.image as img
 import random
 import shared.math as mat
+import napari
 import shared.dataframe as dat
 
 # input parameters
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/DM_singleZ/"
-prefix = '20220407_DMandHSR_DM_singleZ'
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/HSR_singleZ/"
+prefix = '20220407_DMandHSR_HSR_singleZ'
 total_fov = 6
-sample = 'DM'
+sample = 'HSR'
 local_size = 150
 rmax = 100
 dead_int = 10000
@@ -137,9 +138,23 @@ for fov in range(total_fov):
         local_nuclear_centroid = local_nuclear_props[0].centroid
         pixel = pd.DataFrame(columns=['pixel_distance_from_centroid', 'pixel_distance_from_edge', 'pixel_relative_r',
                                       'pixel_FISH_intensity'])
-        _, local_distance_map = medial_axis(nuclear_seg, return_distance=True)
+        _, local_edge_distance_map = medial_axis(nuclear_seg, return_distance=True)
+        local_centroid_distance_map = img.distance_map_from_point(nuclear_seg, local_nuclear_centroid)
+        local_centroid_distance_map[nuclear_seg == 0] = 0
+        local_edge_distance_map[nuclear_seg == 0] = -1
+        local_relative_r_map = local_centroid_distance_map/(local_centroid_distance_map+local_edge_distance_map)
 
-        for m in range(len(nuclear_seg)):
+        radial_distribution_from_centroid = \
+            img.radial_distribution_from_distance_map(nuclear_seg, local_centroid_distance_map, FISH, radial_interval,
+                                                      radial_max)
+        radial_distribution_from_edge = \
+            img.radial_distribution_from_distance_map(nuclear_seg, local_edge_distance_map, FISH, radial_interval,
+                                                      radial_max)
+        radial_distribution_relative_r = \
+            img.radial_distribution_from_distance_map(nuclear_seg, local_relative_r_map, FISH, relative_radial_interval,
+                                                      1)
+
+        """for m in range(len(nuclear_seg)):
             for n in range(len(nuclear_seg[0])):
                 if nuclear_seg[m][n] != 0:
                     pixel_localization_from_centroid = tuple(np.array([m, n]) - np.array(local_nuclear_centroid))
@@ -159,7 +174,7 @@ for fov in range(total_fov):
             dat.radial_distribution(pixel, 'pixel_distance_from_edge', 'pixel_FISH_intensity', radial_interval,
                                     radial_max)
         radial_distribution_relative_r = \
-            dat.radial_distribution(pixel, 'pixel_relative_r', 'pixel_FISH_intensity', relative_radial_interval, 1)
+            dat.radial_distribution(pixel, 'pixel_relative_r', 'pixel_FISH_intensity', relative_radial_interval, 1)"""
 
         data.loc[len(data.index)] = \
             [fov, nuclear_label, nuclear_centroid, nuclear_area, nuclear_major_axis, nuclear_minor_axis,

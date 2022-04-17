@@ -7,9 +7,12 @@ import numpy as np
 import random
 
 master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/"
-colors = [(0.8, 0.8, 0.8), (0.85, 0.35, 0.25)]
-# colors = [(0.2, 0.2, 0.2), (0.85, 0.35, 0.25)]
+# colors = [(0.8, 0.8, 0.8), (0.85, 0.35, 0.25)]
+colors = [(0.2, 0.2, 0.2), (0.85, 0.35, 0.25)]
 rmax = 100
+radial_interval = 1
+radial_max = 120
+relative_radial_interval = 0.01
 # ['#FFA500', '#40E0D0']
 
 data_DM = pd.read_csv('%sDM.txt' % master_folder, na_values=['.'], sep='\t')
@@ -223,7 +226,7 @@ plt.savefig('%s/auto_correlation_DM.pdf' % master_folder)
 plt.close()"""
 
 # auto correlation vs intensity
-data_DM['sample'] = ['DM'] * len(data_DM)
+"""data_DM['sample'] = ['DM'] * len(data_DM)
 data_HSR['sample'] = ['HSR'] * len(data_HSR)
 
 data_DM['g'] = [dat.str_to_float(data_DM['g'][i]) for i in range(len(data_DM))]
@@ -253,4 +256,64 @@ for i in features:
         ax1 = sns.jointplot(data=data, x=target_feature, y=i, hue='sample')
         plt.savefig('%scomparison_of_%s_vs_%s.pdf' % (master_folder, target_feature, i))
         plt.close()
+"""
 
+# radial distribution
+feature = 'radial_distribution_from_edge'
+data_DM[feature] = [dat.str_to_float(data_DM[feature][i]) for i in range(len(data_DM))]
+data_HSR[feature] = [dat.str_to_float(data_HSR[feature][i]) for i in range(len(data_HSR))]
+
+number_nuclear_DM = len(data_DM)
+number_nuclear_HSR = len(data_HSR)
+
+FISH_mean_curve_DM, FISH_ci_lower_DM, FISH_ci_higher_DM = dat.mean_list(data_DM[feature].tolist())
+FISH_mean_curve_HSR, FISH_ci_lower_HSR, FISH_ci_higher_HSR = dat.mean_list(data_HSR[feature].tolist())
+
+r = np.arange(0, radial_max, radial_interval)
+
+plt.subplots(figsize=(6, 4))
+for i in range(len(data_HSR)):
+    plt.plot(r, data_HSR[feature][i], alpha=0.05, color=[colors[0][j]+0.1 for j in range(len(colors[0]))])
+for i in range(len(data_DM)):
+    plt.plot(r, data_DM[feature][i], alpha=0.05, color=[colors[1][j]+0.1 for j in range(len(colors[1]))])
+plt.plot(r, FISH_mean_curve_DM, color=colors[1], label='DM, n=%s' % number_nuclear_DM)
+plt.plot(r, FISH_ci_lower_DM, color=colors[1], linestyle='--', linewidth=0.5)
+plt.plot(r, FISH_ci_higher_DM, color=colors[1], linestyle='--', linewidth=0.5)
+plt.plot(r, FISH_mean_curve_HSR, color=colors[0], label='HSR, n=%s' % number_nuclear_HSR)
+plt.plot(r, FISH_ci_lower_HSR, color=colors[0], linestyle='--', linewidth=0.5)
+plt.plot(r, FISH_ci_higher_HSR, color=colors[0], linestyle='--', linewidth=0.5)
+plt.axhline(y=1, color='#FF4500', linestyle='--')
+plt.xlabel('r')
+plt.ylabel('normalized distribution')
+plt.ylim([0, 2])
+plt.legend()
+plt.savefig('%s/%s_comparison.pdf' % (master_folder, feature))
+plt.close()
+
+plt.subplots(figsize=(6, 4))
+for i in range(len(data_HSR)):
+    plt.plot(r, data_HSR[feature][i], alpha=0.05, color=[colors[0][j]+0.1 for j in range(len(colors[0]))])
+plt.plot(r, FISH_mean_curve_HSR, color=colors[0], label='HSR, n=%s' % number_nuclear_HSR)
+plt.plot(r, FISH_ci_lower_HSR, color=colors[0], linestyle='--', linewidth=0.5)
+plt.plot(r, FISH_ci_higher_HSR, color=colors[0], linestyle='--', linewidth=0.5)
+plt.axhline(y=1, color='#FF4500', linestyle='--')
+plt.xlabel('r')
+plt.ylabel('normalized distribution')
+plt.ylim([0, 2])
+plt.legend()
+plt.savefig('%s/%s_HSR.pdf' % (master_folder, feature))
+plt.close()
+
+plt.subplots(figsize=(6, 4))
+for i in range(len(data_DM)):
+    plt.plot(r, data_DM[feature][i], alpha=0.05, color=[colors[1][j]+0.1 for j in range(len(colors[1]))])
+plt.plot(r, FISH_mean_curve_DM, color=colors[1], label='DM, n=%s' % number_nuclear_DM)
+plt.plot(r, FISH_ci_lower_DM, color=colors[1], linestyle='--', linewidth=0.5)
+plt.plot(r, FISH_ci_higher_DM, color=colors[1], linestyle='--', linewidth=0.5)
+plt.axhline(y=1, color='#FF4500', linestyle='--')
+plt.xlabel('r')
+plt.ylabel('normalized distribution')
+plt.ylim([0, 2])
+plt.legend()
+plt.savefig('%s/%s_DM.pdf' % (master_folder, feature))
+plt.close()
