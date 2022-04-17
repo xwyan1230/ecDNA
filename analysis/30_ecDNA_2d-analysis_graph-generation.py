@@ -259,7 +259,7 @@ for i in features:
 
 
 # radial distribution
-feature = 'radial_distribution_relative_r'
+"""feature = 'radial_distribution_relative_r'
 data_DM[feature] = [dat.str_to_float(data_DM[feature][i]) for i in range(len(data_DM))]
 data_HSR[feature] = [dat.str_to_float(data_HSR[feature][i]) for i in range(len(data_HSR))]
 
@@ -316,4 +316,34 @@ plt.ylabel('normalized distribution')
 plt.ylim([0, 2])
 plt.legend()
 plt.savefig('%s/%s_DM.pdf' % (master_folder, feature))
+plt.close()"""
+
+# direction map of ecDNA centroid
+data_DM['sample'] = ['DM'] * len(data_DM)
+data_HSR['sample'] = ['HSR'] * len(data_HSR)
+
+data_DM['ecDNA_localization_from_centroid'] = \
+    [dat.str_to_list_of_float(data_DM['ecDNA_localization_from_centroid'][i], 2) for i in range(len(data_DM))]
+data_HSR['ecDNA_localization_from_centroid'] = \
+    [dat.str_to_list_of_float(data_HSR['ecDNA_localization_from_centroid'][i], 2) for i in range(len(data_HSR))]
+
+x_DM, y_DM = dat.list_separation(data_DM, 'ecDNA_localization_from_centroid')
+x_HSR, y_HSR = dat.list_separation(data_HSR, 'ecDNA_localization_from_centroid')
+
+temp = pd.DataFrame({'x': x_HSR+x_DM, 'y': y_HSR+y_DM, 'sample': ['HSR']*len(x_HSR)+['DM']*len(x_DM)})
+
+colors = [(0.85, 0.35, 0.25), (0.2, 0.2, 0.2)]
+sns.set_palette(sns.color_palette(colors))
+ax1 = sns.displot(data=temp[temp['sample'] == 'DM'], x='x', y='y', bins=15)
+plt.ylim([-100, 100])
+plt.xlim([-100, 100])
+plt.savefig('%s/direction_map_of_ecDNA_centroid_DM.pdf' % master_folder)
 plt.close()
+colors = [(0.2, 0.2, 0.2), (0.85, 0.35, 0.25)]
+sns.set_palette(sns.color_palette(colors))
+ax2 = sns.displot(data=temp[temp['sample'] == 'HSR'], x='x', y='y', bins=15)
+plt.ylim([-100, 100])
+plt.xlim([-100, 100])
+plt.savefig('%s/direction_map_of_ecDNA_centroid_HSR.pdf' % master_folder)
+plt.close()
+

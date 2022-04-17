@@ -3,6 +3,7 @@ import pandas as pd
 import random
 import math
 import scipy.stats as st
+import re
 
 
 """
@@ -27,10 +28,13 @@ List related:
     mean_list
         FUNCTION: calculate mean list from a list of lists and its confidence interval, excluding 0 numbers
         SYNTAX:   mean_list(lst: list)
-        
     list_exclude_zero
         FUNCTION: exclude zero from list y and corresponding index in x
         SYNTAX:   list_exclude_zero(x: list, y: list)
+    
+    str_to_list_of_float
+        FUNCTION: transform a string into a list of lists of float
+        SYNTAX:   str_to_list_of_float(string: str)
 
 Matrix related:
     matrix_pad_with_zeros
@@ -197,3 +201,44 @@ def radial_distribution(df: pd.DataFrame, feature_x, feature_y, interval: float,
             out.append(0)
 
     return out
+
+
+def str_to_list_of_float(string: str, n_element: int):
+    """
+        Transform a string into a list of lists of float
+
+        Examples:
+        input string: (28 characters)
+        [[5.55, 6.53], [7.35, 8.91]]
+        output list: (a list of 2 elements)
+        [[5.55, 6.53], [7.35, 8.91]]
+        :param string: str, string to be converted
+        ;param n_element: int, number of element in the sub list
+        :return: out: list
+        """
+    out = []
+    string_split = re.split(r', |[()]', string[1:-1])
+    string_split = list(filter(None, string_split))
+    string_split = [float(i) for i in string_split]
+    for i in range(int(len(string_split)/n_element)):
+        out.append([string_split[j+n_element*i] for j in range(n_element)])
+    return out
+
+
+def list_separation(df: pd.DataFrame, key: str):
+    """
+    Separate 2-element list into two list (mostly for x,y localization)
+
+    :param df: pd.DataFrame
+    :param key: str, column name of given feature
+    :return:
+    """
+    x = []
+    y = []
+    for i in range(len(df)):
+        temp = df[key][i]
+        x = x + [temp[j][0] for j in range(len(temp))]
+        y = y + [temp[j][1] for j in range(len(temp))]
+
+    return x, y
+
