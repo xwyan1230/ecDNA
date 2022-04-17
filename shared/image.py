@@ -8,6 +8,7 @@ import matplotlib.patches as patches
 import numpy
 import storm_analysis.sa_library.datareader as datareader
 import storm_analysis.sa_library.sa_h5py as saH5Py
+import napari
 
 
 """
@@ -374,7 +375,7 @@ def distance_map_from_point(img: np.array, point: tuple):
 
 
 def radial_distribution_from_distance_map(img_seg: np.array, img_distance_map: np.array, img_feature: np.array,
-                                          interval: float, feature_max: float, feature_thresh=0):
+                                          interval: float, feature_max: float):
     """
     Calculate radial distribution from distance map
 
@@ -383,20 +384,23 @@ def radial_distribution_from_distance_map(img_seg: np.array, img_distance_map: n
     :param img_feature: np.array, feature image, for example: intensity image
     :param interval: float, bin size
     :param feature_max: float, maximum for analysis, number larger than maximum number will be binned in the last bin
-    ;param freature_thresh: float, only feature larger than this threshold is analysed, default=0
     :return:
     """
     out = []
-    feature_seg = img_feature.copy()
-    feature_seg[img_seg == 0] = 0
+    """feature_seg = np.array(img_feature.copy()).astype(int)
     feature_seg = feature_seg - feature_thresh
-    feature_seg[feature_seg < 0] = 0
+    feature_seg[(feature_seg < 0) | (img_seg == 0)] = 0
+    feature_thresh = img_feature.copy()
+    feature_thresh[feature_seg == 0] = 0
     seg_seg = img_seg.copy()
-    seg_seg[feature_seg == 0] = 0
-    mean_feature = np.sum(feature_seg)/np.sum(seg_seg)
+    seg_seg[feature_seg == 0] = 0"""
+    feature_thresh = img_feature.copy()
+    feature_thresh[img_seg == 0] = 0
+    seg_seg = img_seg.copy()
+    mean_feature = np.sum(feature_thresh)/np.sum(seg_seg)
     for i in np.arange(0, feature_max, interval):
         seg_temp = seg_seg.copy()
-        feature_temp = feature_seg.copy()
+        feature_temp = feature_thresh.copy()
         seg_temp[img_distance_map < i] = 0
         feature_temp[img_distance_map < i] = 0
         if feature_max - i > interval:
