@@ -20,7 +20,8 @@ total_fov = 6
 sample = 'HSR'
 local_size = 150
 rmax = 100
-dead_int = 10000
+int_thresh_auto_correlation = 10000
+int_thresh_radial_distribution = 10000
 radial_interval = 1
 radial_max = 120
 relative_radial_interval = 0.01
@@ -123,8 +124,8 @@ for fov in range(total_fov):
             for n in range(len(nuclear_seg[0])):
                 if nuclear_seg[m][n] == 1:
                     vector.append([m, n])
-                    if FISH[m][n] > dead_int:
-                        weight = weight + FISH[m][n] - dead_int
+                    if FISH[m][n] > int_thresh_auto_correlation:
+                        weight = weight + FISH[m][n] - int_thresh_auto_correlation
                     vector_cum_weight.append(weight)
         random_dot = random.choices(vector, cum_weights=vector_cum_weight, k=100)
         img_dot = np.zeros_like(nuclear_seg)
@@ -132,6 +133,7 @@ for fov in range(total_fov):
             img_dot[j[0]][j[1]] = img_dot[j[0]][j[1]] + 1
 
         _, r, g, dg = mat.auto_correlation(img_dot, nuclear_seg, rmax)
+        # _, r, g, dg = mat.auto_correlation(FISH, nuclear_seg, rmax)
 
         # radial distribution
         local_nuclear_props = regionprops(label(nuclear_seg))
@@ -146,15 +148,17 @@ for fov in range(total_fov):
 
         radial_distribution_from_centroid = \
             img.radial_distribution_from_distance_map(nuclear_seg, local_centroid_distance_map, FISH, radial_interval,
-                                                      radial_max)
+                                                      radial_max, feature_thresh=int_thresh_radial_distribution)
         radial_distribution_from_edge = \
             img.radial_distribution_from_distance_map(nuclear_seg, local_edge_distance_map, FISH, radial_interval,
-                                                      radial_max)
+                                                      radial_max, feature_thresh=int_thresh_radial_distribution)
         radial_distribution_relative_r = \
             img.radial_distribution_from_distance_map(nuclear_seg, local_relative_r_map, FISH, relative_radial_interval,
-                                                      1)
+                                                      1, feature_thresh=int_thresh_radial_distribution)
 
-        """for m in range(len(nuclear_seg)):
+        """
+        # old algorithm for radial distribution analysis
+        for m in range(len(nuclear_seg)):
             for n in range(len(nuclear_seg[0])):
                 if nuclear_seg[m][n] != 0:
                     pixel_localization_from_centroid = tuple(np.array([m, n]) - np.array(local_nuclear_centroid))

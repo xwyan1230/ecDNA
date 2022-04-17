@@ -374,7 +374,7 @@ def distance_map_from_point(img: np.array, point: tuple):
 
 
 def radial_distribution_from_distance_map(img_seg: np.array, img_distance_map: np.array, img_feature: np.array,
-                                          interval: float, feature_max: float):
+                                          interval: float, feature_max: float, feature_thresh=0):
     """
     Calculate radial distribution from distance map
 
@@ -383,23 +383,28 @@ def radial_distribution_from_distance_map(img_seg: np.array, img_distance_map: n
     :param img_feature: np.array, feature image, for example: intensity image
     :param interval: float, bin size
     :param feature_max: float, maximum for analysis, number larger than maximum number will be binned in the last bin
+    ;param freature_thresh: float, only feature larger than this threshold is analysed, default=0
     :return:
     """
     out = []
     feature_seg = img_feature.copy()
     feature_seg[img_seg == 0] = 0
-    mean_feature = np.sum(feature_seg)/np.sum(img_seg)
+    feature_seg = feature_seg - feature_thresh
+    feature_seg[feature_seg < 0] = 0
+    seg_seg = img_seg.copy()
+    seg_seg[feature_seg == 0] = 0
+    mean_feature = np.sum(feature_seg)/np.sum(seg_seg)
     for i in np.arange(0, feature_max, interval):
-        seg_temp = img_seg.copy()
+        seg_temp = seg_seg.copy()
         feature_temp = feature_seg.copy()
         seg_temp[img_distance_map < i] = 0
         feature_temp[img_distance_map < i] = 0
         if feature_max - i > interval:
             seg_temp[img_distance_map >= (i+interval)] = 0
             feature_temp[img_distance_map >= (i+interval)] = 0
-            if np.sum(seg_temp) != 0:
-                out.append(np.sum(feature_temp)/np.sum(seg_temp))
-            else:
-                out.append(0)
+        if np.sum(seg_temp) != 0:
+            out.append((np.sum(feature_temp)/np.sum(seg_temp))/mean_feature)
+        else:
+            out.append(0)
 
     return out
