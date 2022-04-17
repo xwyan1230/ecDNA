@@ -7,8 +7,8 @@ import numpy as np
 import random
 
 master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/"
-colors = [(0.8, 0.8, 0.8), (0.85, 0.35, 0.25)]
-# colors = [(0.2, 0.2, 0.2), (0.85, 0.35, 0.25)]
+# colors = [(0.8, 0.8, 0.8), (0.85, 0.35, 0.25)]
+colors = [(0.2, 0.2, 0.2), (0.85, 0.35, 0.25)]
 rmax = 100
 radial_interval = 1
 radial_max = 120
@@ -226,7 +226,7 @@ plt.savefig('%s/auto_correlation_DM.pdf' % master_folder)
 plt.close()"""
 
 # auto correlation vs intensity
-data_DM['sample'] = ['DM'] * len(data_DM)
+"""data_DM['sample'] = ['DM'] * len(data_DM)
 data_HSR['sample'] = ['HSR'] * len(data_HSR)
 
 data_DM['g'] = [dat.str_to_float(data_DM['g'][i]) for i in range(len(data_DM))]
@@ -241,7 +241,7 @@ data['MYC_intensity/FISH_intensity'] = data['MYC_total_intensity']/data['nuclear
 sns.set_palette(sns.color_palette(colors))
 ax1 = sns.jointplot(data=data, x='g_value', y='MYC_intensity/FISH_intensity', hue='sample')
 plt.savefig('%scomparison_of_g_value_vs_intensity_residue.pdf' % master_folder)
-plt.close()
+plt.close()"""
 
 """features = ['nuclear_area', 'nuclear_major_axis', 'nuclear_minor_axis', 'nuclear_axis_ratio', 'nuclear_circularity',
             'nuclear_eccentricity', 'nuclear_FISH_mean_intensity', 'nuclear_total_intensity', 'ecDNA_number',
@@ -259,7 +259,7 @@ for i in features:
 
 
 # radial distribution
-"""feature = 'radial_distribution_relative_r'
+feature = 'radial_distribution_relative_r'
 data_DM[feature] = [dat.str_to_float(data_DM[feature][i]) for i in range(len(data_DM))]
 data_HSR[feature] = [dat.str_to_float(data_HSR[feature][i]) for i in range(len(data_HSR))]
 
@@ -316,4 +316,4 @@ plt.ylabel('normalized distribution')
 plt.ylim([0, 2])
 plt.legend()
 plt.savefig('%s/%s_DM.pdf' % (master_folder, feature))
-plt.close()"""
+plt.close()

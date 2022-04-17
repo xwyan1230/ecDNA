@@ -21,7 +21,6 @@ sample = 'HSR'
 local_size = 150
 rmax = 100
 int_thresh_auto_correlation = 10000
-int_thresh_radial_distribution = 10000
 radial_interval = 1
 radial_max = 120
 relative_radial_interval = 0.01
@@ -148,13 +147,13 @@ for fov in range(total_fov):
 
         radial_distribution_from_centroid = \
             img.radial_distribution_from_distance_map(nuclear_seg, local_centroid_distance_map, FISH, radial_interval,
-                                                      radial_max, feature_thresh=int_thresh_radial_distribution)
+                                                      radial_max)
         radial_distribution_from_edge = \
             img.radial_distribution_from_distance_map(nuclear_seg, local_edge_distance_map, FISH, radial_interval,
-                                                      radial_max, feature_thresh=int_thresh_radial_distribution)
+                                                      radial_max)
         radial_distribution_relative_r = \
             img.radial_distribution_from_distance_map(nuclear_seg, local_relative_r_map, FISH, relative_radial_interval,
-                                                      1, feature_thresh=int_thresh_radial_distribution)
+                                                      1)
 
         """
         # old algorithm for radial distribution analysis
