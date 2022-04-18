@@ -412,3 +412,11 @@ def radial_distribution_from_distance_map(img_seg: np.array, img_distance_map: n
             out.append(0)
 
     return out
+
+
+def sum_up_image(img_add_to: np.array, img_add_from: np.array, direction: tuple, normalization_factor: float):
+    feature_recentered = image_paste(img_add_to, img_add_from, direction)
+    feature_recentered = np.array(feature_recentered).astype(float) * normalization_factor
+    out = img_add_to + feature_recentered
+
+    return out

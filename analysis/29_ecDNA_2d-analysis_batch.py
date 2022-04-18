@@ -14,16 +14,17 @@ import napari
 import shared.dataframe as dat
 
 # input parameters
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/HSR_singleZ/"
-prefix = '20220407_DMandHSR_HSR_singleZ'
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/DM_singleZ/"
+prefix = '20220407_DMandHSR_DM_singleZ'
 total_fov = 6
-sample = 'HSR'
+sample = 'DM'
 local_size = 150
 rmax = 100
 int_thresh_auto_correlation = 10000
 radial_interval = 1
 radial_max = 120
 relative_radial_interval = 0.01
+average_image_size = 400
 
 
 data = pd.DataFrame(columns=['FOV', 'nuclear_label', 'nuclear_centroid', 'nuclear_area', 'nuclear_major_axis',
@@ -36,6 +37,10 @@ data = pd.DataFrame(columns=['FOV', 'nuclear_label', 'nuclear_centroid', 'nuclea
                              'ecDNA_distance_from_edge',
                              'MYC_mean_intensity', 'MYC_total_intensity', 'g', 'dg', 'radial_distribution_from_centroid',
                              'radial_distribution_from_edge', 'radial_distribution_relative_r'])
+FISH_sum = np.zeros(shape=(average_image_size, average_image_size))
+nuclear_sum = np.zeros(shape=(average_image_size, average_image_size))
+nuclear_seg_sum = np.zeros(shape=(average_image_size, average_image_size))
+center = [average_image_size/2, average_image_size/2]
 
 for fov in range(total_fov):
     print("Start analyzing FOV %s/%s" % (fov+1, total_fov))
@@ -114,7 +119,8 @@ for fov in range(total_fov):
         # auto-correlation
         position = img.img_local_position(img_nuclear_seg_convex, nuclear_centroid, local_size)
         nuclear_seg = img.img_local_seg(img_nuclear_seg_convex, position, i + 1)
-        FISH = img_FISH[position[0]:position[1], position[2]:position[3]]
+        img_FISH_temp = img_FISH.copy()
+        FISH = img_FISH_temp[position[0]:position[1], position[2]:position[3]]
         plt.imsave('%sFISH_fov%s_i%s.tiff' % (master_folder, fov, i), FISH)
         vector = []
         vector_cum_weight = []
@@ -179,6 +185,44 @@ for fov in range(total_fov):
         radial_distribution_relative_r = \
             dat.radial_distribution(pixel, 'pixel_relative_r', 'pixel_FISH_intensity', relative_radial_interval, 1)"""
 
+        # average plot and intensity saturation measurement
+        FISH_seg = FISH.copy()
+        FISH_seg[nuclear_seg == 0] = 0
+        mean_intensity_FISH = np.sum(FISH_seg)/np.sum(nuclear_seg)
+        direction = list((np.array(center)-np.array(local_nuclear_centroid)).astype(int))
+        FISH_sum = img.sum_up_image(FISH_sum, FISH_seg, direction, 5000.0/mean_intensity_FISH)
+        print('max FISH intensity: %s' % np.max(FISH_seg))
+        temp = nuclear_seg.copy()
+        temp[FISH_seg < 65535] = 0
+        print('pixels that are saturated/ FISH: %s' % np.sum(temp))
+        print('mean FISH intensity: %s' % np.mean(FISH_seg))
+
+        img_nuclear_temp = img_nuclear.copy()
+        local_nuclear = img_nuclear_temp[position[0]:position[1], position[2]:position[3]]
+        nuclear_seg_temp = img_nuclear_seg_convex[position[0]:position[1], position[2]:position[3]]
+        local_nuclear[nuclear_seg == 0] = 0
+        mean_intensity_nuclear = np.sum(local_nuclear)/np.sum(nuclear_seg)
+        nuclear_sum = img.sum_up_image(nuclear_sum, local_nuclear, direction, 5000.0/mean_intensity_nuclear)
+        print('max nuclear intensity: %s' % np.max(local_nuclear))
+        temp = nuclear_seg.copy()
+        temp[local_nuclear < 65535] = 0
+        print('pixels that are saturated/ nuclear: %s' % np.sum(temp))
+        print('mean nuclear intensity: %s' % np.mean(local_nuclear))
+        nuclear_scaled_temp = np.array(nuclear_sum * 65535 / math.ceil(np.max(nuclear_sum))).astype(int)
+        plt.imsave('%savg_nuclear_temp_%s_fov%s_i%s_int.tiff' % (master_folder, sample, fov, i), local_nuclear)
+        plt.imsave('%savg_nuclear_temp_%s_fov%s_i%s.tiff' % (master_folder, sample, fov, i), nuclear_scaled_temp)
+
+        nuclear_seg_sum = img.sum_up_image(nuclear_seg_sum, nuclear_seg, direction, 1)
+
+        img_MYC_temp = img_MYC.copy()
+        local_MYC = img_MYC_temp[position[0]:position[1], position[2]:position[3]]
+        local_MYC[nuclear_seg == 0] = 0
+        print('max MYC intensity: %s' % np.max(local_MYC))
+        temp = nuclear_seg.copy()
+        temp[local_MYC < 65535] = 0
+        print('pixels that are saturated/ MYC: %s' % np.sum(temp))
+        print('mean MYC intensity: %s' % np.mean(local_MYC))
+
         data.loc[len(data.index)] = \
             [fov, nuclear_label, nuclear_centroid, nuclear_area, nuclear_major_axis, nuclear_minor_axis,
              nuclear_axis_ratio, nuclear_circularity, nuclear_eccentricity, nuclear_FISH_mean_intensity,
@@ -188,6 +232,23 @@ for fov in range(total_fov):
              ecDNA_localization_from_centroid, ecDNA_distance_from_centroid, ecDNA_distance_from_edge,
              MYC_mean_intensity, MYC_total_intensity,
              g, dg, radial_distribution_from_centroid, radial_distribution_from_edge, radial_distribution_relative_r]
+
+viewer = napari.Viewer()
+viewer.add_image(img_nuclear)
+napari.run()
+viewer = napari.Viewer()
+viewer.add_image(img_FISH)
+napari.run()
+viewer = napari.Viewer()
+viewer.add_image(img_MYC)
+napari.run()
+
+FISH_scaled = np.array(FISH_sum*65535/math.ceil(np.max(FISH_sum))).astype(int)
+nuclear_scaled = np.array(nuclear_sum*65535/math.ceil(np.max(nuclear_sum))).astype(int)
+nuclear_seg_scaled = np.array(nuclear_seg_sum*65535/math.ceil(np.max(nuclear_seg_sum))).astype(int)
+plt.imsave('%savg_FISH_%s.tiff' % (master_folder, sample), FISH_scaled)
+plt.imsave('%savg_nuclear_%s.tiff' % (master_folder, sample), nuclear_scaled)
+plt.imsave('%savg_nuclear_seg_%s.tiff' % (master_folder, sample), nuclear_seg_scaled)
 
 data.to_csv('%s%s.txt' % (master_folder, sample), index=False, sep='\t')
 
