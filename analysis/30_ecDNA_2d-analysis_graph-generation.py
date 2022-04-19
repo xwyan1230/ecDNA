@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 import shared.dataframe as dat
 import numpy as np
 import random
+import shared.math as mat
 
 master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/"
 # colors = [(0.8, 0.8, 0.8), (0.85, 0.35, 0.25)]
@@ -169,6 +170,32 @@ for i in features:
         plt.savefig('%scomparison_of_%s_vs_%s.pdf' % (master_folder, target_feature, i))
         plt.close()"""
 
+# MYC_total_intensity vs FISH_total_intensity_nuclear
+data_DM['sample'] = ['DM'] * len(data_DM)
+data_HSR['sample'] = ['HSR'] * len(data_HSR)
+
+data = pd.concat([data_HSR, data_DM], axis=0, ignore_index=True)
+sns.set_palette(sns.color_palette(colors))
+
+ax1 = sns.jointplot(data=data, x='MYC_total_intensity', y='nuclear_total_intensity', hue='sample')
+
+_, int_fit_r2_DM, int_fit_a_DM = \
+    mat.fitting_linear_b0(data[data['sample'] == 'DM']['MYC_total_intensity'].tolist(),
+                          data[data['sample'] == 'DM']['nuclear_total_intensity'].tolist())
+_, int_fit_r2_HSR, int_fit_a_HSR = \
+    mat.fitting_linear_b0(data[data['sample'] == 'HSR']['MYC_total_intensity'].tolist(),
+                          data[data['sample'] == 'HSR']['nuclear_total_intensity'].tolist())
+
+x = np.arange(0, 1.5 * pow(10, 9), pow(10, 7))
+y_DM = int_fit_a_DM * x
+y_HSR = int_fit_a_HSR * x
+ax1.ax_joint.plot(x, y_HSR, linewidth=2, color=colors[0], linestyle='--')
+ax1.ax_joint.plot(x, y_DM, linewidth=2, color=colors[1], linestyle='--')
+
+plt.savefig('%scomparison_of_MYC_total_intensity_vs_FISH_total_intensity_nuclear.pdf' % master_folder)
+plt.close()
+
+
 # auto-correlation
 """data_DM['g'] = [dat.str_to_float(data_DM['g'][i]) for i in range(len(data_DM))]
 data_HSR['g'] = [dat.str_to_float(data_HSR['g'][i]) for i in range(len(data_HSR))]
@@ -239,9 +266,25 @@ data['MYC_intensity/FISH_intensity'] = data['MYC_total_intensity']/data['nuclear
 # data.to_csv('%sprocessed.txt' % master_folder, index=False, sep='\t')
 
 sns.set_palette(sns.color_palette(colors))
+
 ax1 = sns.jointplot(data=data, x='g_value', y='MYC_intensity/FISH_intensity', hue='sample')
+
+_, g_fit_r2_DM, g_fit_a_DM = \
+    mat.fitting_linear_b0(data[data['sample'] == 'DM']['g_value'].tolist(),
+                          data[data['sample'] == 'DM']['MYC_intensity/FISH_intensity'].tolist())
+_, g_fit_r2_HSR, g_fit_a_HSR = \
+    mat.fitting_linear_b0(data[data['sample'] == 'HSR']['g_value'].tolist(),
+                          data[data['sample'] == 'HSR']['MYC_intensity/FISH_intensity'].tolist())
+
+x = np.arange(0, 20, 0.5)
+y_DM = g_fit_a_DM * x
+y_HSR = g_fit_a_HSR * x
+ax1.ax_joint.plot(x, y_HSR, linewidth=2, color=colors[0], linestyle='--')
+ax1.ax_joint.plot(x, y_DM, linewidth=2, color=colors[1], linestyle='--')
+
 plt.savefig('%scomparison_of_g_value_vs_intensity_residue.pdf' % master_folder)
 plt.close()"""
+
 
 """features = ['nuclear_area', 'nuclear_major_axis', 'nuclear_minor_axis', 'nuclear_axis_ratio', 'nuclear_circularity',
             'nuclear_eccentricity', 'nuclear_FISH_mean_intensity', 'nuclear_total_intensity', 'ecDNA_number',
@@ -256,7 +299,6 @@ for i in features:
         ax1 = sns.jointplot(data=data, x=target_feature, y=i, hue='sample')
         plt.savefig('%scomparison_of_%s_vs_%s.pdf' % (master_folder, target_feature, i))
         plt.close()"""
-
 
 # radial distribution
 """feature = 'radial_distribution_relative_r'
@@ -319,7 +361,7 @@ plt.savefig('%s/%s_DM.pdf' % (master_folder, feature))
 plt.close()"""
 
 # direction map of ecDNA centroid
-data_DM['sample'] = ['DM'] * len(data_DM)
+"""data_DM['sample'] = ['DM'] * len(data_DM)
 data_HSR['sample'] = ['HSR'] * len(data_HSR)
 
 data_DM['ecDNA_localization_from_centroid'] = \
@@ -345,5 +387,5 @@ ax2 = sns.displot(data=temp[temp['sample'] == 'HSR'], x='x', y='y', bins=15)
 plt.ylim([-100, 100])
 plt.xlim([-100, 100])
 plt.savefig('%s/direction_map_of_ecDNA_centroid_HSR.pdf' % master_folder)
-plt.close()
+plt.close()"""
 

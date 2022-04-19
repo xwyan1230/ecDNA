@@ -6,6 +6,7 @@ import shared.objects as obj
 from scipy import ndimage
 import math
 import shared.dataframe as dat
+from scipy.optimize import curve_fit
 
 """
 # ---------------------------------------------------------------------------------------------------
@@ -24,6 +25,17 @@ cart2pol_matrix
     FUNCTION: Transform Cartesian coordinate into polar coordinates, matrix format
     SYNTAX:   cart2pol_matrix(x: np.array, y: np.array)
 
+linear
+    EQUATION: y = a * x + b
+    SYNTAX:   linear(x, a, b)
+    
+r_square
+    FUNCTION: calculate r_squared for a given curve fitting
+    SYNTAX:   r_square(y: list, y_fit: list)
+
+fitting_linear
+    FUNCTION: perform linear fitting
+    SYNTAX:   fitting_linear(x: list, y: list)  
 """
 
 
@@ -119,3 +131,88 @@ def cart2pol_matrix(x: np.array, y: np.array):
             r[i][j], theta[i][j] = cart2pol(x[i][j], y[i][j])
 
     return r, theta
+
+
+# linear regression
+def linear(x, a, b):
+    """
+        Linear regression function
+    """
+
+    return a * x + b
+
+
+def linear_b0(x, a):
+    return a * x
+
+
+# r_square calculation
+def r_square(y: list, y_fit: list):
+    """
+    calculate r_squared for a given curve fitting
+
+    :param y: values before fitting
+    :param y_fit: values from fitting
+    :return: r_squared
+    """
+
+    ss_res = np.sum([(a - b) ** 2 for a, b in zip(y, y_fit)])
+    ss_tot = np.sum([(a - np.mean(y)) ** 2 for a in y])
+    r2 = 1 - (ss_res / ss_tot)
+    return r2
+
+
+def fitting_linear(x: list, y: list):
+    """
+    Perform linear fitting
+
+    y = a * x + b
+
+    :param x:
+    :param y:
+    :return: y_fit:
+             r2:
+             a:
+             b:
+    """
+
+    try:
+        popt, _ = curve_fit(linear, x, y)
+        a, b = popt
+    except RuntimeError:
+        a = np.nan
+        b = np.nan
+
+    y_fit = []
+    for j in range(len(y)):
+        y_fit.append(linear(x[j], a, b))
+    r2 = r_square(y, y_fit)
+
+    return y_fit, r2, a, b
+
+
+def fitting_linear_b0(x: list, y: list):
+    """
+    Perform linear fitting
+
+    y = a * x
+
+    :param x:
+    :param y:
+    :return: y_fit:
+             r2:
+             a:
+             b:
+    """
+
+    try:
+        a, _ = curve_fit(linear_b0, x, y)
+    except RuntimeError:
+        a = np.nan
+
+    y_fit = []
+    for j in range(len(y)):
+        y_fit.append(linear_b0(x[j], a))
+    r2 = r_square(y, y_fit)
+
+    return y_fit, r2, a
