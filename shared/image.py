@@ -415,8 +415,38 @@ def radial_distribution_from_distance_map(img_seg: np.array, img_distance_map: n
 
 
 def sum_up_image(img_add_to: np.array, img_add_from: np.array, direction: tuple, normalization_factor: float):
+    """
+    Sum up image (need to rescale before display)
+
+    :param img_add_to: np.array
+    :param img_add_from: np.array
+    :param direction: distance between two anchor points of two images
+    :param normalization_factor: float
+    :return:
+    """
     feature_recentered = image_paste(img_add_to, img_add_from, direction)
     feature_recentered = np.array(feature_recentered).astype(float) * normalization_factor
     out = img_add_to + feature_recentered
 
     return out
+
+
+def radial_percentage_from_distance_map(img_seg: np.array, img_distance_map: np.array, img_feature: np.array,
+                                        feature_range: list):
+    """
+    Get radial percentage within certain range from distance map
+
+    :param img_seg: np.array, 0-1 binary image, segmentation image
+    :param img_distance_map: np.array, distance map
+    :param img_feature: np.array, feature image, for example: intensity image
+    :param feature_range: list of two values, [lower limit, higher limit)
+    :return:
+    """
+    feature_thresh = img_feature.copy()
+    feature_thresh[img_seg == 0] = 0
+    sum_feature = np.sum(feature_thresh)
+
+    feature_temp = feature_thresh.copy()
+    feature_temp[(img_distance_map < feature_range[0]) | (img_distance_map >= feature_range[1])] = 0
+
+    return np.sum(feature_temp)*1.0/sum_feature

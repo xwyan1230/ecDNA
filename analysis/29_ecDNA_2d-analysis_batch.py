@@ -14,10 +14,10 @@ import napari
 import shared.dataframe as dat
 
 # input parameters
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/HSR_singleZ/"
-prefix = '20220407_DMandHSR_HSR_singleZ'
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/DM_singleZ/"
+prefix = '20220407_DMandHSR_DM_singleZ'
 total_fov = 6
-sample = 'HSR'
+sample = 'DM'
 local_size = 150
 rmax = 100
 int_thresh_auto_correlation = 10000
@@ -37,7 +37,7 @@ data = pd.DataFrame(columns=['FOV', 'nuclear_label', 'nuclear_centroid', 'nuclea
                              'ecDNA_centroid', 'ecDNA_localization_from_centroid', 'ecDNA_distance_from_centroid',
                              'ecDNA_distance_from_edge',
                              'MYC_mean_intensity', 'MYC_total_intensity', 'g', 'dg', 'radial_distribution_from_centroid',
-                             'radial_distribution_from_edge', 'radial_distribution_relative_r'])
+                             'radial_distribution_from_edge', 'radial_distribution_relative_r', 'R35l', 'R35r'])
 FISH_sum = np.zeros(shape=(average_image_size, average_image_size))
 nuclear_sum = np.zeros(shape=(average_image_size, average_image_size))
 nuclear_seg_sum = np.zeros(shape=(average_image_size, average_image_size))
@@ -165,6 +165,13 @@ for fov in range(total_fov):
         radial_distribution_relative_r = \
             img.radial_distribution_from_distance_map(nuclear_seg, local_relative_r_map, FISH, relative_radial_interval,
                                                       1)
+        R35l = img.radial_percentage_from_distance_map(nuclear_seg, local_relative_r_map, FISH, [0, 0.35])
+        R35r = img.radial_percentage_from_distance_map(nuclear_seg, local_relative_r_map, FISH, [0.35, 1])
+        if R35l > 0.18:
+            print("fov%s/i%s" % (fov, i))
+            viewer = napari.Viewer()
+            viewer.add_image(FISH)
+            napari.run()
 
         """
         # old algorithm for radial distribution analysis
@@ -237,7 +244,8 @@ for fov in range(total_fov):
              ecDNA_intensity, ecDNA_total_intensity, ecDNA_participating_coefficient, ecDNA_centroid,
              ecDNA_localization_from_centroid, ecDNA_distance_from_centroid, ecDNA_distance_from_edge,
              MYC_mean_intensity, MYC_total_intensity,
-             g, dg, radial_distribution_from_centroid, radial_distribution_from_edge, radial_distribution_relative_r]
+             g, dg, radial_distribution_from_centroid, radial_distribution_from_edge, radial_distribution_relative_r,
+             R35l, R35r]
 
 viewer = napari.Viewer()
 viewer.add_image(img_nuclear)

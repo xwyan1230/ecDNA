@@ -18,7 +18,7 @@ relative_radial_interval = 0.01
 
 data_DM = pd.read_csv('%sDM.txt' % master_folder, na_values=['.'], sep='\t')
 data_HSR = pd.read_csv('%sHSR.txt' % master_folder, na_values=['.'], sep='\t')
-
+data_auto = pd.read_csv('%sDM_auto_correlation_fov0_i2.txt' % master_folder, na_values=['.'], sep='\t')
 
 # heat map
 """data_DM['sample'] = [1] * len(data_DM)
@@ -171,7 +171,7 @@ for i in features:
         plt.close()"""
 
 # MYC_total_intensity vs FISH_total_intensity_nuclear
-data_DM['sample'] = ['DM'] * len(data_DM)
+"""data_DM['sample'] = ['DM'] * len(data_DM)
 data_HSR['sample'] = ['HSR'] * len(data_HSR)
 
 data = pd.concat([data_HSR, data_DM], axis=0, ignore_index=True)
@@ -193,7 +193,7 @@ ax1.ax_joint.plot(x, y_HSR, linewidth=2, color=colors[0], linestyle='--')
 ax1.ax_joint.plot(x, y_DM, linewidth=2, color=colors[1], linestyle='--')
 
 plt.savefig('%scomparison_of_MYC_total_intensity_vs_FISH_total_intensity_nuclear.pdf' % master_folder)
-plt.close()
+plt.close()"""
 
 
 # auto-correlation
@@ -252,7 +252,7 @@ plt.ylim([-0.5, 10.5])
 plt.savefig('%s/auto_correlation_DM.pdf' % master_folder)
 plt.close()"""
 
-# auto correlation vs intensity
+# g_value vs intensity
 """data_DM['sample'] = ['DM'] * len(data_DM)
 data_HSR['sample'] = ['HSR'] * len(data_HSR)
 
@@ -360,6 +360,51 @@ plt.legend()
 plt.savefig('%s/%s_DM.pdf' % (master_folder, feature))
 plt.close()"""
 
+# radial distribution vs intensity/g_value
+"""data_DM['sample'] = ['DM'] * len(data_DM)
+data_HSR['sample'] = ['HSR'] * len(data_HSR)
+
+feature = 'radial_distribution_relative_r'
+data_DM[feature] = [dat.str_to_float(data_DM[feature][i]) for i in range(len(data_DM))]
+data_HSR[feature] = [dat.str_to_float(data_HSR[feature][i]) for i in range(len(data_HSR))]
+
+data_DM['g'] = [dat.str_to_float(data_DM['g'][i]) for i in range(len(data_DM))]
+data_HSR['g'] = [dat.str_to_float(data_HSR['g'][i]) for i in range(len(data_HSR))]
+
+data = pd.concat([data_HSR, data_DM], axis=0, ignore_index=True)
+data['g_value'] = [(data['g'][i][1] + data['g'][i][2] + data['g'][i][3] + data['g'][i][4] + data['g'][i][5])*0.2
+                   for i in range(len(data))]
+
+data['R4'] = [(data[feature][i][2] + data[feature][i][3] + data[feature][i][4] + data[feature][i][5] +
+               data[feature][i][6])*0.2 for i in range(len(data))]
+data['R66'] = [(data[feature][i][64] + data[feature][i][65] + data[feature][i][66] + data[feature][i][67] +
+                data[feature][i][68])*0.2 for i in range(len(data))]
+data['R4/R66'] = data['R4']/data['R66']
+
+data['MYC_intensity/FISH_intensity'] = data['MYC_total_intensity']/data['FISH_total_intensity_nuclear']
+
+sns.set_palette(sns.color_palette(colors))
+
+# ax1 = sns.jointplot(data=data, x='R35l', y='MYC_intensity/FISH_intensity', hue='sample')
+ax1 = sns.jointplot(data=data, x='R35l', y='g_value', hue='sample')
+
+_, g_fit_r2_DM, g_fit_a_DM, g_fit_b_DM = \
+    mat.fitting_linear(data[data['sample'] == 'DM']['R35l'].tolist(),
+                          data[data['sample'] == 'DM']['MYC_intensity/FISH_intensity'].tolist())
+_, g_fit_r2_HSR, g_fit_a_HSR, g_fit_b_HSR = \
+    mat.fitting_linear(data[data['sample'] == 'HSR']['R35l'].tolist(),
+                          data[data['sample'] == 'HSR']['MYC_intensity/FISH_intensity'].tolist())
+
+x = np.arange(0, 0.2, 0.01)
+y_DM = g_fit_a_DM * x + g_fit_b_DM
+y_HSR = g_fit_a_HSR * x + g_fit_b_HSR
+ax1.ax_joint.plot(x, y_HSR, linewidth=2, color=colors[0], linestyle='--')
+ax1.ax_joint.plot(x, y_DM, linewidth=2, color=colors[1], linestyle='--')
+
+# plt.savefig('%scomparison_of_radial_distribution_vs_intensity_residue.pdf' % master_folder)
+plt.savefig('%scomparison_of_radial_distribution_vs_g_value.pdf' % master_folder)
+plt.close()"""
+
 # direction map of ecDNA centroid
 """data_DM['sample'] = ['DM'] * len(data_DM)
 data_HSR['sample'] = ['HSR'] * len(data_HSR)
@@ -388,4 +433,16 @@ plt.ylim([-100, 100])
 plt.xlim([-100, 100])
 plt.savefig('%s/direction_map_of_ecDNA_centroid_HSR.pdf' % master_folder)
 plt.close()"""
+
+# auto-correlation, different int_thresh, different seed number
+data_auto['g'] = [dat.str_to_float(data_auto['g'][i]) for i in range(len(data_auto))]
+data_auto['nan'] = [data_auto['g'][i][0] for i in range(len(data_auto))]
+data_auto.dropna(subset=['nan'], inplace=True)
+data_auto.reset_index(drop=True, inplace=True)
+
+df = data_auto.pivot(columns='int_thresh', index='dots', values='g_value')
+# ax1 = sns.heatmap(data=df, annot=True, cmap='viridis', cbar=True, cbar_kws={'label': 'g_value'}, square=True)
+ax1 = sns.heatmap(data=df, cmap='viridis', cbar=True, cbar_kws={'label': 'g_value'}, square=True)
+plt.savefig('%s/effect_of_dots_and_intThresh_on_auto_correlation_fov0_i2.pdf' % master_folder)
+plt.close()
 
