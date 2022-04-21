@@ -14,10 +14,10 @@ import napari
 import shared.dataframe as dat
 
 # input parameters
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/HSR_singleZ/"
-prefix = '20220407_DMandHSR_HSR_singleZ'
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/DM_singleZ/"
+prefix = '20220407_DMandHSR_DM_singleZ'
 total_fov = 6
-sample = 'HSR'
+sample = 'DM'
 local_size = 150
 rmax = 100
 radial_interval = 1
@@ -128,7 +128,7 @@ for fov in range(total_fov):
 
             data.loc[len(data.index)] = [fov, i, int_thresh, g, g_value]
 
-data.to_csv('%s%s_auto_correlation.txt' % (master_folder, sample, fov, i), index=False, sep='\t')
+data.to_csv('%s%s_auto_correlation.txt' % (master_folder, sample), index=False, sep='\t')
 
 print("DONE!")
 
