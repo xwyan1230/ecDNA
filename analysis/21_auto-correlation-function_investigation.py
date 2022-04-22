@@ -195,7 +195,7 @@ print(g1)
 print(g2)"""
 
 # step 10: DNA FISH object mimic (cluster, different number)
-im_test = np.zeros((250, 250))
+"""im_test = np.zeros((250, 250))
 im_seg = ima.logical_ellipse(im_test, 125, 125, 50, 50)
 im_test1 = ima.logical_ellipse(im_test, 125, 125, 20, 20)
 im_FISH = ima.logical_dot_sample(im_test, im_test1, 100)
@@ -220,6 +220,41 @@ plt.legend(loc=2, bbox_to_anchor=(0.02, 0.99))
 plt.savefig('%s/auto_correlation_test.pdf' % data_path)
 plt.ylim([-0.5, 10.5])
 plt.savefig('%s/auto_correlation_test_part.pdf' % data_path)
+plt.close()"""
+
+# step 11: 2,3,4 cluster, same size, binary image, random sampling
+im_test = np.zeros((250, 250))
+im_seg = ima.logical_ellipse(im_test, 125, 125, 50, 50)
+im_FISH_template = ima.logical_ellipse(im_test, 125, 125, 8, 8)
+im_FISH = ima.logical_dot_sample(im_test, im_FISH_template, 100)
+im_FISH1_template = ima.logical_ellipse(im_test, 125, 125, 6, 5)
+im_FISH1_template = ima.logical_ellipse(im_FISH1_template, 90, 100, 6, 5)
+im_FISH1 = ima.logical_dot_sample(im_test, im_FISH1_template, 100)
+im_FISH2_template = ima.logical_ellipse(im_test, 125, 125, 4, 4)
+im_FISH2_template = ima.logical_ellipse(im_FISH2_template, 90, 100, 4, 5)
+im_FISH2_template = ima.logical_ellipse(im_FISH2_template, 130, 150, 5, 5)
+im_FISH2 = ima.logical_dot_sample(im_test, im_FISH2_template, 100)
+
+print(np.sum(im_FISH_template))
+print(np.sum(im_FISH1_template))
+print(np.sum(im_FISH2_template))
+
+_, r, g, _ = mat.auto_correlation(im_FISH, im_seg, 100)
+_, r1, g1, _ = mat.auto_correlation(im_FISH1, im_seg, 100)
+_, r2, g2, _ = mat.auto_correlation(im_FISH2, im_seg, 100)
+print(g)
+print(g1)
+print(g2)
+
+plt.subplots(figsize=(6, 4))
+plt.plot(r[:60], g[:60], color='#FFD700', label='1 cluster')
+plt.plot(r1[:60], g1[:60], alpha=0.4, color='#40E0D0', label='2 clusters')
+plt.plot(r2[:60], g2[:60], alpha=0.4, color='#DA70D6', label='3 clusters')
+#plt.ylim([-0.5, 5])
+plt.xlabel('r')
+plt.ylabel('g')
+plt.legend(loc=2, bbox_to_anchor=(0.02, 0.99))
+plt.savefig('%s/auto_correlation_test.pdf' % data_path)
 plt.close()
 
 viewer = napari.Viewer()
@@ -227,7 +262,7 @@ viewer.add_image(im_seg, colormap='red')
 napari.run()
 
 viewer = napari.Viewer()
-viewer.add_image(im_FISH, colormap='green', contrast_limits=[0, 1])
+viewer.add_image(im_FISH_template, colormap='green', contrast_limits=[0, 1])
 napari.run()
 
 viewer = napari.Viewer()
@@ -236,7 +271,7 @@ viewer.add_image(im_FISH, colormap='green', blending='additive', contrast_limits
 napari.run()
 
 viewer = napari.Viewer()
-viewer.add_image(im_FISH1, colormap='green', contrast_limits=[0, 1])
+viewer.add_image(im_FISH1_template, colormap='green', contrast_limits=[0, 1])
 napari.run()
 
 viewer = napari.Viewer()
@@ -245,7 +280,7 @@ viewer.add_image(im_FISH1, colormap='green', blending='additive', contrast_limit
 napari.run()
 
 viewer = napari.Viewer()
-viewer.add_image(im_FISH2, colormap='green', contrast_limits=[0, 1])
+viewer.add_image(im_FISH2_template, colormap='green', contrast_limits=[0, 1])
 napari.run()
 
 viewer = napari.Viewer()
