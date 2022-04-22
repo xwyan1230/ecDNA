@@ -68,6 +68,14 @@ radial_distribution_from_distance_map
     FUNCTION: calculate radial distribution from distance map
     SYNTAX:   radial_distribution_from_distance_map(img_seg: np.array, img_distance_map: np.array, img_feature: 
               np.array, interval: float, feature_max: float)
+
+save_3d_image
+    FUNCTION: save 3d images as txt file (require reshape)
+    SYNTAX:   save_3d_image(img_stack: np.array, save_location: str, file_name: str)
+
+load_3d_image
+    FUNCTION: load 3d image as np.array (require reshape)
+    SYNTAX:   load_3d_image(load_location: str, file_name: str, shape2: int)
 """
 
 
@@ -450,3 +458,28 @@ def radial_percentage_from_distance_map(img_seg: np.array, img_distance_map: np.
     feature_temp[(img_distance_map < feature_range[0]) | (img_distance_map >= feature_range[1])] = 0
 
     return np.sum(feature_temp)*1.0/sum_feature
+
+
+def save_3d_image(img_stack: np.array, save_location: str, file_name: str):
+    """
+    Save 3d images as txt file (require reshape)
+    :param img_stack: np.array, 3d image stack, time or z
+    :param save_location: str, master_folder
+    :param file_name: str, saving name
+    :return:
+    """
+    arr_reshaped = img_stack.reshape(img_stack.shape[0], -1)
+    np.savetxt("%s%s.txt" % (save_location, file_name), arr_reshaped)
+
+
+def load_3d_image(load_location: str, file_name: str, shape2: int):
+    """
+    Load 3d image as np.array (require reshape)
+    :param load_location: str, master_folder
+    :param file_name: str, saving name
+    :param shape2: int, original_array.shape[2]
+    :return:
+    """
+    loaded_arr = np.loadtxt("%s%s.txt" % (load_location, file_name))
+    load_original_arr = loaded_arr.reshape(loaded_arr.shape[0], loaded_arr.shape[1] // shape2, shape2)
+    return load_original_arr

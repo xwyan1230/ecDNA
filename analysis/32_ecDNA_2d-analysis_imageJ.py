@@ -18,12 +18,11 @@ import shared.dataframe as dat
 master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220420_sp8_DMandBRD4_plate/DM_6z_maxProject_imageJ/"
 prefix = 'DM_1um-6z-5um_6pos_max_projection_RAW'
 sample = 'DM'
-
-rmax = 100
-int_thresh_auto_correlation = 10000
-radial_interval = 1
-radial_max = 120
-relative_radial_interval = 0.01
+pixel_size = 58.7  # nm (sp8 confocal 3144x3144)
+cell_avg_size = 10  # um (Colo)
+nuclear_size_range = [0.6, 1.5]  # used to filter nucleus
+solidity_threshold_nuclear = 0.9
+n_nuclear_convex_dilation = 3
 
 # LOAD IMAGE
 im_stack_nuclear = skio.imread("%s%s_ch00.tif" % (master_folder, prefix), plugin="tifffile")
@@ -32,15 +31,28 @@ im_stack_IF = skio.imread("%s%s_ch01.tif" % (master_folder, prefix), plugin="tif
 
 # SET UP PARAMETERS
 total_fov = im_stack_nuclear.shape[0]
-# for single FOV only, assuming shape[1]==shape[2]
-local_size = int(0.05 * im_stack_nuclear.shape[1])
-avg_image_size = int(0.1 * im_stack_nuclear.shape[1])
-
-# CREATE avg_img
-avg_img_DNAFISH = np.zeros(shape=(avg_image_size, avg_image_size))
-avg_img_nuclear = np.zeros(shape=(avg_image_size, avg_image_size))
-avg_img_nuclear_seg = np.zeros(shape=(avg_image_size, avg_image_size))
-avg_img_center = [int(avg_image_size/2), int(avg_image_size/2)]
+# single nuclear analysis
+local_size = 150  # single FOV only, assuming squared pixel, ~150, int(0.9 * cell_avg_size * 1000/pixel_size)
+# avg_img
+avg_img_size = 300  # for generating avg_img, ~300, 2 * local_size
+avg_img_DNAFISH = np.zeros(shape=(avg_img_size, avg_img_size))
+avg_img_nuclear = np.zeros(shape=(avg_img_size, avg_img_size))
+avg_img_nuclear_seg = np.zeros(shape=(avg_img_size, avg_img_size))
+avg_img_center = [int(avg_img_size / 2), int(avg_img_size / 2)]
+# auto-correlation analysis
+rmax = 100  # int(0.67 * local_size)
+int_thresh_auto_correlation = 10000  # need to be determined
+k_dots = 20000  # need to optimize
+# segmentation
+local_factor_nuclear = 99  # ~99, needs to be odd number, rmax if (rmax % 2 == 1) else rmax+1
+min_size_nuclear = (nuclear_size_range[0] * cell_avg_size * 1000/(pixel_size * 2)) ** 2 * math.pi
+max_size_nuclear = (nuclear_size_range[1] * cell_avg_size * 1000/(pixel_size * 2)) ** 2 * math.pi
+extreme_val_ecDNA = 18000  # need to be determined
+connecting_factor_ecDNA = 10
+# radial distribution analysis
+radial_interval = 1
+radial_max = int(0.8 * local_size)  # ~120
+relative_radial_interval = 0.01
 
 # CREATE data
 data = pd.DataFrame(columns=['FOV',
@@ -90,16 +102,20 @@ for fov in range(total_fov):
 
     # nuclear segmentation
     print("Start segmentation...")
-    img_nuclear_seg = seg.nuclear_seg1(img_nuclear, local_factor=99, min_size=9000, max_size=50000)
-    img_nuclear_seg = seg.filter_solidity(img_nuclear_seg)
+
+    img_nuclear_seg = seg.nuclear_seg1(img_nuclear, local_factor=local_factor_nuclear, min_size=min_size_nuclear,
+                                       max_size=max_size_nuclear)
+    img_nuclear_seg = seg.filter_solidity(img_nuclear_seg, threshold=solidity_threshold_nuclear)
     img_nuclear_seg_convex = seg.obj_to_convex(img_nuclear_seg)
-    img_nuclear_seg_convex = dilation(img_nuclear_seg_convex, disk(3))
+    img_nuclear_seg_convex = dilation(img_nuclear_seg_convex, disk(n_nuclear_convex_dilation))
 
     # ecDNA segmentation
-    _, img_DNAFISH_seg = seg.find_organelle(img_DNAFISH, 'na', extreme_val=18000,
-                                            bg_val=seg.get_bg_int([img_DNAFISH])[0], min_size=5, max_size=50000)
-    img_DNAFISH_seg = binary_dilation(img_DNAFISH_seg, disk(10))
-    for i in range(10):
+    _, img_DNAFISH_seg = seg.find_organelle(img_DNAFISH, 'na', extreme_val=extreme_val_ecDNA,
+                                            bg_val=seg.get_bg_int([img_DNAFISH])[0], min_size=10,
+                                            max_size=max_size_nuclear)  # min_size: at least needs to have two pixels
+    # connect neighbour ecDNA signal
+    img_DNAFISH_seg = binary_dilation(img_DNAFISH_seg, disk(connecting_factor_ecDNA))
+    for i in range(connecting_factor_ecDNA):
         img_DNAFISH_seg = binary_erosion(img_DNAFISH_seg)
     img_DNAFISH_seg = ndimage.binary_fill_holes(img_DNAFISH_seg)
     img_DNAFISH_seg = obj.remove_small(img_DNAFISH_seg, min_size=20)
@@ -126,7 +142,7 @@ for fov in range(total_fov):
         eccentricity_nuclear = DNAFISH_props[i].eccentricity
         mean_intensity_hoechst = nuclear_props[i].mean_intensity
         total_intensity_hoechst = area_nuclear * mean_intensity_hoechst
-        
+
         ###### HAVEN"T EDIT #####
         # ecDNA related
         FISH_mean_intensity_nuclear = DNAFISH_props[i].mean_intensity
