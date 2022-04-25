@@ -137,10 +137,17 @@ for fov in range(total_fov):
                     if FISH[m][n] > int_thresh_auto_correlation:
                         weight = weight + FISH[m][n] - int_thresh_auto_correlation
                     vector_cum_weight.append(weight)
-        random_dot = random.choices(vector, cum_weights=vector_cum_weight, k=100)
+        random_dot = random.choices(vector, cum_weights=vector_cum_weight, k=10000)
         img_dot = np.zeros_like(nuclear_seg)
         for j in random_dot:
             img_dot[j[0]][j[1]] = img_dot[j[0]][j[1]] + 1
+
+        viewer = napari.Viewer()
+        viewer.add_image(FISH)
+        napari.run()
+        viewer = napari.Viewer()
+        viewer.add_image(img_dot)
+        napari.run()
 
         _, r, g, dg = mat.auto_correlation(img_dot, nuclear_seg, rmax)
         # _, r, g, dg = mat.auto_correlation(FISH, nuclear_seg, rmax)
@@ -211,7 +218,6 @@ for fov in range(total_fov):
 
         img_nuclear_temp = img_nuclear.copy()
         local_nuclear = img_nuclear_temp[position[0]:position[1], position[2]:position[3]]
-        nuclear_seg_temp = img_nuclear_seg_convex[position[0]:position[1], position[2]:position[3]]
         local_nuclear[nuclear_seg == 0] = 0
         mean_intensity_nuclear = np.sum(local_nuclear)/np.sum(nuclear_seg)
         nuclear_sum = img.sum_up_image(nuclear_sum, local_nuclear, direction, 5000.0/mean_intensity_nuclear)

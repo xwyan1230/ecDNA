@@ -121,7 +121,8 @@ def img_local_seg(img: np.array, position: list, label_number: int):
     :param label_number: int, number of label in original segmented image
     :return:
     """
-    temp = img[position[0]:position[1], position[2]:position[3]]
+    temp = img.copy()
+    temp = temp[position[0]:position[1], position[2]:position[3]]
     out = np.zeros_like(temp, dtype=float)
     out[temp == label_number] = 1
 
@@ -179,7 +180,8 @@ def image_paste_fix_value(paste_to_image: np.array, paste_from_img: np.array, di
     paste_to_img = paste_to_image.copy()
     for i in range(paste_from_img.shape[0]):
         for j in range(paste_from_img.shape[1]):
-            if paste_from_img[i][j] != 0:
+            if (paste_from_img[i][j] != 0) & (i+distance[0] < len(paste_to_img)) & \
+                    (j+distance[1] < len(paste_to_img[0])):
                 paste_to_img[i + distance[0]][j + distance[1]] = value
 
     return paste_to_img
