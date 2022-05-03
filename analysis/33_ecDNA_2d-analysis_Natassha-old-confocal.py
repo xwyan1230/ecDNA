@@ -8,10 +8,9 @@ import skimage.io as skio
 import tifffile as tif
 
 # input parameters
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/211102_3hr_JQ1washout/"
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/211102_3hr_JQ1washout/3hrJQ1_3hrDMSO_WO/"
 prefix = '211102_COLODM'
-total_fov = 2
-sample = '3hrJQ1_3hr1uMtriptolide_WO'
+sample = '3hrJQ1_3hrDMSO_WO'
 pixel_size = 40  # nm (Zeiss confocal scope)
 cell_avg_size = 10  # um (Colo)
 nuclear_size_range = [0.6, 1.5]  # used to filter nucleus
@@ -19,7 +18,7 @@ total_fov = 2
 
 # SET UP PARAMETERS
 # segmentation
-local_factor_nuclear = 299  # needs to be odd number, rmax if (rmax % 2 == 1) else rmax+1
+local_factor_nuclear = 399  # needs to be odd number, rmax if (rmax % 2 == 1) else rmax+1
 min_size_nuclear = (nuclear_size_range[0] * cell_avg_size * 1000/(pixel_size * 2)) ** 2 * math.pi
 max_size_nuclear = (nuclear_size_range[1] * cell_avg_size * 1000/(pixel_size * 2)) ** 2 * math.pi
 

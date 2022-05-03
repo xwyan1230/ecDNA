@@ -18,7 +18,7 @@ relative_radial_interval = 0.01
 
 data_DM = pd.read_csv('%sDM.txt' % master_folder, na_values=['.'], sep='\t')
 data_HSR = pd.read_csv('%sHSR.txt' % master_folder, na_values=['.'], sep='\t')
-data_auto = pd.read_csv('%sDM_auto_correlation_fov0_i2.txt' % master_folder, na_values=['.'], sep='\t')
+# data_auto = pd.read_csv('%sDM_auto_correlation_fov0_i2.txt' % master_folder, na_values=['.'], sep='\t')
 
 # heat map
 """data_DM['sample'] = [1] * len(data_DM)
@@ -157,10 +157,10 @@ data_HSR['sample'] = ['HSR'] * len(data_HSR)
 data = pd.concat([data_HSR, data_DM], axis=0, ignore_index=True)
 
 features = ['nuclear_area', 'nuclear_major_axis', 'nuclear_minor_axis', 'nuclear_axis_ratio', 'nuclear_circularity',
-            'nuclear_eccentricity', 'nuclear_FISH_mean_intensity', 'nuclear_total_intensity', 'ecDNA_number',
+            'nuclear_eccentricity', 'FISH_mean_intensity_nuclear', 'FISH_total_intensity_nuclear', 'ecDNA_number',
             'ecDNA_total_area', 'area_ratio', 'ecDNA_mean_area', 'ecDNA_max_area', 'ecDNA_total_intensity',
             'ecDNA_participating_coefficient', 'MYC_mean_intensity', 'MYC_total_intensity']
-target_feature = 'MYC_total_intensity'
+target_feature = 'ecDNA_total_area'
 sns.set_palette(sns.color_palette(colors))
 for i in features:
     if i != target_feature:
@@ -252,6 +252,7 @@ plt.ylim([-0.5, 10.5])
 plt.savefig('%s/auto_correlation_DM.pdf' % master_folder)
 plt.close()"""
 
+
 # g_value vs intensity
 """data_DM['sample'] = ['DM'] * len(data_DM)
 data_HSR['sample'] = ['HSR'] * len(data_HSR)
@@ -291,6 +292,55 @@ plt.close()"""
             'ecDNA_total_area', 'area_ratio', 'ecDNA_mean_area', 'ecDNA_max_area', 'ecDNA_total_intensity',
             'ecDNA_participating_coefficient', 'MYC_mean_intensity', 'MYC_total_intensity']
 target_feature = 'g_value'
+sns.set_palette(sns.color_palette(colors))
+for i in features:
+    if i != target_feature:
+        # ax1 = sns.histplot(data, x='MYC_total_intensity', y='ecDNA_total_intensity', hue='sample', multiple='dodge',
+        # stat='probability', bins=20)
+        ax1 = sns.jointplot(data=data, x=target_feature, y=i, hue='sample')
+        plt.savefig('%scomparison_of_%s_vs_%s.pdf' % (master_folder, target_feature, i))
+        plt.close()"""
+
+# g_value vs intensity (intensity corrected)
+"""data_DM['sample'] = ['DM'] * len(data_DM)
+data_HSR['sample'] = ['HSR'] * len(data_HSR)
+
+data_DM['g'] = [dat.str_to_float(data_DM['g'][i]) for i in range(len(data_DM))]
+data_HSR['g'] = [dat.str_to_float(data_HSR['g'][i]) for i in range(len(data_HSR))]
+
+data = pd.concat([data_HSR, data_DM], axis=0, ignore_index=True)
+data['g_value'] = [(data['g'][i][1] + data['g'][i][2] + data['g'][i][3] + data['g'][i][4] + data['g'][i][5])*0.2
+                   for i in range(len(data))]
+data['g_corrected'] = data['g_value'] * data['FISH_total_intensity_nuclear'] / 100000000.0
+data['MYC_intensity/FISH_intensity'] = data['MYC_total_intensity']/data['nuclear_total_intensity']
+# data.to_csv('%sprocessed.txt' % master_folder, index=False, sep='\t')
+
+sns.set_palette(sns.color_palette(colors))
+
+ax1 = sns.jointplot(data=data, x='g_corrected', y='MYC_intensity/FISH_intensity', hue='sample')
+
+_, g_fit_r2_DM, g_fit_a_DM = \
+    mat.fitting_linear_b0(data[data['sample'] == 'DM']['g_corrected'].tolist(),
+                          data[data['sample'] == 'DM']['MYC_intensity/FISH_intensity'].tolist())
+_, g_fit_r2_HSR, g_fit_a_HSR = \
+    mat.fitting_linear_b0(data[data['sample'] == 'HSR']['g_corrected'].tolist(),
+                          data[data['sample'] == 'HSR']['MYC_intensity/FISH_intensity'].tolist())
+
+x = np.arange(0, 20, 0.5)
+y_DM = g_fit_a_DM * x
+y_HSR = g_fit_a_HSR * x
+ax1.ax_joint.plot(x, y_HSR, linewidth=2, color=colors[0], linestyle='--')
+ax1.ax_joint.plot(x, y_DM, linewidth=2, color=colors[1], linestyle='--')
+
+plt.savefig('%scomparison_of_g_corrected_vs_intensity_residue.pdf' % master_folder)
+plt.close()
+
+
+features = ['nuclear_area', 'nuclear_major_axis', 'nuclear_minor_axis', 'nuclear_axis_ratio', 'nuclear_circularity',
+            'nuclear_eccentricity', 'FISH_mean_intensity_nuclear', 'FISH_total_intensity_nuclear', 'ecDNA_number',
+            'ecDNA_total_area', 'area_ratio', 'ecDNA_mean_area', 'ecDNA_max_area', 'ecDNA_total_intensity',
+            'ecDNA_participating_coefficient', 'MYC_mean_intensity', 'MYC_total_intensity']
+target_feature = 'g_corrected'
 sns.set_palette(sns.color_palette(colors))
 for i in features:
     if i != target_feature:
@@ -435,7 +485,7 @@ plt.savefig('%s/direction_map_of_ecDNA_centroid_HSR.pdf' % master_folder)
 plt.close()"""
 
 # auto-correlation, different int_thresh, different seed number
-data_auto['g'] = [dat.str_to_float(data_auto['g'][i]) for i in range(len(data_auto))]
+"""data_auto['g'] = [dat.str_to_float(data_auto['g'][i]) for i in range(len(data_auto))]
 data_auto['nan'] = [data_auto['g'][i][0] for i in range(len(data_auto))]
 data_auto.dropna(subset=['nan'], inplace=True)
 data_auto.reset_index(drop=True, inplace=True)
@@ -444,5 +494,5 @@ df = data_auto.pivot(columns='int_thresh', index='dots', values='g_value')
 # ax1 = sns.heatmap(data=df, annot=True, cmap='viridis', cbar=True, cbar_kws={'label': 'g_value'}, square=True)
 ax1 = sns.heatmap(data=df, cmap='viridis', cbar=True, cbar_kws={'label': 'g_value'}, square=True)
 plt.savefig('%s/effect_of_dots_and_intThresh_on_auto_correlation_fov0_i2.pdf' % master_folder)
-plt.close()
+plt.close()"""
 

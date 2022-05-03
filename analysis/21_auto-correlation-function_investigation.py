@@ -223,7 +223,7 @@ plt.savefig('%s/auto_correlation_test_part.pdf' % data_path)
 plt.close()"""
 
 # step 11: 2,3,4 cluster, same size, binary image, random sampling
-im_test = np.zeros((250, 250))
+"""im_test = np.zeros((250, 250))
 im_seg = ima.logical_ellipse(im_test, 125, 125, 50, 50)
 im_FISH_template = ima.logical_ellipse(im_test, 125, 125, 8, 8)
 im_FISH = ima.logical_dot_sample(im_test, im_FISH_template, 100)
@@ -255,6 +255,57 @@ plt.xlabel('r')
 plt.ylabel('g')
 plt.legend(loc=2, bbox_to_anchor=(0.02, 0.99))
 plt.savefig('%s/auto_correlation_test.pdf' % data_path)
+plt.close()"""
+
+# step 12: effect of size of cell
+"""im_test = np.zeros((250, 250))
+im_seg = ima.logical_ellipse(im_test, 125, 125, 50, 50)
+im_FISH_template = ima.logical_ellipse(im_test, 125, 125, 8, 8)
+im_FISH = ima.logical_dot_sample(im_test, im_FISH_template, 100)
+im_seg1 = ima.logical_ellipse(im_test, 125, 125, 60, 60)
+im_seg2 = ima.logical_ellipse(im_test, 125, 125, 70, 70)
+
+_, r, g, _ = mat.auto_correlation(im_FISH, im_seg, 100)
+_, r1, g1, _ = mat.auto_correlation(im_FISH, im_seg1, 100)
+_, r2, g2, _ = mat.auto_correlation(im_FISH, im_seg2, 100)
+print(g)
+print(g1)
+print(g2)
+
+plt.subplots(figsize=(6, 4))
+plt.plot(r[:60], g[:60], color='#FFD700', label='R50')
+plt.plot(r1[:60], g1[:60], alpha=0.4, color='#40E0D0', label='R60')
+plt.plot(r2[:60], g2[:60], alpha=0.4, color='#DA70D6', label='R70')
+#plt.ylim([-0.5, 5])
+plt.xlabel('r')
+plt.ylabel('g')
+plt.legend(loc=2, bbox_to_anchor=(0.02, 0.99))
+plt.savefig('%s/auto_correlation_test.pdf' % data_path)
+plt.close()"""
+
+# test13 different ecDNA copy number
+im_test = np.zeros((250, 250))
+im_seg = ima.logical_ellipse(im_test, 125, 125, 50, 50)
+im_FISH = ima.logical_ellipse(im_test, 125, 125, 5, 5)
+im_FISH1 = ima.logical_ellipse(im_FISH, 90, 100, 5, 5)
+im_FISH2 = ima.logical_ellipse(im_FISH1, 130, 150, 5, 5)
+
+_, r, g, _ = mat.auto_correlation(im_FISH, im_seg, 100)
+_, r1, g1, _ = mat.auto_correlation(im_FISH1, im_seg, 100)
+_, r2, g2, _ = mat.auto_correlation(im_FISH2, im_seg, 100)
+print(g)
+print(g1)
+print(g2)
+
+plt.subplots(figsize=(6, 4))
+plt.plot(r[:60], g[:60], color='#FFD700', label='1 cluster')
+plt.plot(r1[:60], 2*np.array(g1[:60]), alpha=0.4, color='#40E0D0', label='2 clusters')
+plt.plot(r2[:60], 3*np.array(g2[:60]), alpha=0.4, color='#DA70D6', label='3 clusters')
+#plt.ylim([-0.5, 5])
+plt.xlabel('r')
+plt.ylabel('g')
+plt.legend(loc=2, bbox_to_anchor=(0.02, 0.99))
+plt.savefig('%s/auto_correlation_test.pdf' % data_path)
 plt.close()
 
 viewer = napari.Viewer()
@@ -262,7 +313,7 @@ viewer.add_image(im_seg, colormap='red')
 napari.run()
 
 viewer = napari.Viewer()
-viewer.add_image(im_FISH_template, colormap='green', contrast_limits=[0, 1])
+viewer.add_image(im_FISH, colormap='green', contrast_limits=[0, 1])
 napari.run()
 
 viewer = napari.Viewer()
@@ -271,19 +322,19 @@ viewer.add_image(im_FISH, colormap='green', blending='additive', contrast_limits
 napari.run()
 
 viewer = napari.Viewer()
-viewer.add_image(im_FISH1_template, colormap='green', contrast_limits=[0, 1])
+viewer.add_image(im_seg1, colormap='red', contrast_limits=[0, 1])
 napari.run()
 
 viewer = napari.Viewer()
-viewer.add_image(im_seg, colormap='red', blending='additive')
-viewer.add_image(im_FISH1, colormap='green', blending='additive', contrast_limits=[0, 1])
+viewer.add_image(im_seg1, colormap='red', blending='additive')
+viewer.add_image(im_FISH, colormap='green', blending='additive', contrast_limits=[0, 1])
 napari.run()
 
 viewer = napari.Viewer()
-viewer.add_image(im_FISH2_template, colormap='green', contrast_limits=[0, 1])
+viewer.add_image(im_seg2, colormap='red', contrast_limits=[0, 1])
 napari.run()
 
 viewer = napari.Viewer()
-viewer.add_image(im_seg, colormap='red', blending='additive')
-viewer.add_image(im_FISH2, colormap='green', blending='additive', contrast_limits=[0, 1])
+viewer.add_image(im_seg2, colormap='red', blending='additive')
+viewer.add_image(im_FISH, colormap='green', blending='additive', contrast_limits=[0, 1])
 napari.run()
