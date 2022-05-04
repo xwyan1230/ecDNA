@@ -7,7 +7,7 @@ import numpy as np
 import random
 import shared.math as mat
 
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/"
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220420_sp8_DMandBRD4_plate/"
 # colors = [(0.8, 0.8, 0.8), (0.85, 0.35, 0.25)]
 colors = [(0.2, 0.2, 0.2), (0.85, 0.35, 0.25)]
 rmax = 100
@@ -16,8 +16,8 @@ radial_max = 120
 relative_radial_interval = 0.01
 # ['#FFA500', '#40E0D0']
 
-data_DM = pd.read_csv('%sDM.txt' % master_folder, na_values=['.'], sep='\t')
-data_HSR = pd.read_csv('%sHSR.txt' % master_folder, na_values=['.'], sep='\t')
+data_DM = pd.read_csv('%sBRD4KO.txt' % master_folder, na_values=['.'], sep='\t')
+data_HSR = pd.read_csv('%sDM.txt' % master_folder, na_values=['.'], sep='\t')
 # data_auto = pd.read_csv('%sDM_auto_correlation_fov0_i2.txt' % master_folder, na_values=['.'], sep='\t')
 
 # heat map
@@ -213,78 +213,81 @@ for i in range(len(data_HSR)):
     plt.plot(r, data_HSR['g'][i], alpha=0.05, color=[colors[0][j]+0.1 for j in range(len(colors[0]))])
 for i in range(len(data_DM)):
     plt.plot(r, data_DM['g'][i], alpha=0.05, color=[colors[1][j]+0.1 for j in range(len(colors[1]))])
-plt.plot(r, FISH_mean_curve_DM, color=colors[1], label='DM, n=%s' % number_nuclear_DM)
+plt.plot(r, FISH_mean_curve_DM, color=colors[1], label='BRD4KO, n=%s' % number_nuclear_DM)
 plt.plot(r, FISH_ci_lower_DM, color=colors[1], linestyle='--', linewidth=0.5)
 plt.plot(r, FISH_ci_higher_DM, color=colors[1], linestyle='--', linewidth=0.5)
-plt.plot(r, FISH_mean_curve_HSR, color=colors[0], label='HSR, n=%s' % number_nuclear_HSR)
+plt.plot(r, FISH_mean_curve_HSR, color=colors[0], label='DM, n=%s' % number_nuclear_HSR)
 plt.plot(r, FISH_ci_lower_HSR, color=colors[0], linestyle='--', linewidth=0.5)
 plt.plot(r, FISH_ci_higher_HSR, color=colors[0], linestyle='--', linewidth=0.5)
 plt.xlabel('r')
 plt.ylabel('g')
 plt.legend()
-plt.ylim([-0.5, 10.5])
+plt.ylim([-0.5, 100.5])
 plt.savefig('%s/auto_correlation_comparison.pdf' % master_folder)
 plt.close()
 
 plt.subplots(figsize=(6, 4))
 for i in range(len(data_HSR)):
     plt.plot(r, data_HSR['g'][i], alpha=0.05, color=[colors[0][j]+0.1 for j in range(len(colors[0]))])
-plt.plot(r, FISH_mean_curve_HSR, color=colors[0], label='HSR, n=%s' % number_nuclear_HSR)
+plt.plot(r, FISH_mean_curve_HSR, color=colors[0], label='DM, n=%s' % number_nuclear_HSR)
 plt.plot(r, FISH_ci_lower_HSR, color=colors[0], linestyle='--', linewidth=0.5)
 plt.plot(r, FISH_ci_higher_HSR, color=colors[0], linestyle='--', linewidth=0.5)
 plt.xlabel('r')
 plt.ylabel('g')
 plt.legend()
-plt.ylim([-0.5, 10.5])
-plt.savefig('%s/auto_correlation_HSR.pdf' % master_folder)
+plt.ylim([-0.5, 100.5])
+plt.savefig('%s/auto_correlation_DM.pdf' % master_folder)
 plt.close()
 
 plt.subplots(figsize=(6, 4))
 for i in range(len(data_DM)):
     plt.plot(r, data_DM['g'][i], alpha=0.05, color=[colors[1][j]+0.1 for j in range(len(colors[1]))])
-plt.plot(r, FISH_mean_curve_DM, color=colors[1], label='DM, n=%s' % number_nuclear_DM)
+plt.plot(r, FISH_mean_curve_DM, color=colors[1], label='BRD4KO, n=%s' % number_nuclear_DM)
 plt.plot(r, FISH_ci_lower_DM, color=colors[1], linestyle='--', linewidth=0.5)
 plt.plot(r, FISH_ci_higher_DM, color=colors[1], linestyle='--', linewidth=0.5)
 plt.xlabel('r')
 plt.ylabel('g')
 plt.legend()
-plt.ylim([-0.5, 10.5])
-plt.savefig('%s/auto_correlation_DM.pdf' % master_folder)
+plt.ylim([-0.5, 100.5])
+plt.savefig('%s/auto_correlation_BRD4KO.pdf' % master_folder)
 plt.close()"""
 
 
 # g_value vs intensity
-"""data_DM['sample'] = ['DM'] * len(data_DM)
-data_HSR['sample'] = ['HSR'] * len(data_HSR)
+data_DM['sample'] = ['BRD4KO'] * len(data_DM)
+data_HSR['sample'] = ['DM'] * len(data_HSR)
 
-data_DM['g'] = [dat.str_to_float(data_DM['g'][i]) for i in range(len(data_DM))]
-data_HSR['g'] = [dat.str_to_float(data_HSR['g'][i]) for i in range(len(data_HSR))]
+# data_DM['g'] = [dat.str_to_float(data_DM['g'][i]) for i in range(len(data_DM))]
+# data_HSR['g'] = [dat.str_to_float(data_HSR['g'][i]) for i in range(len(data_HSR))]
+
+# data = pd.concat([data_HSR, data_DM], axis=0, ignore_index=True)
+# data['g_value'] = [(data['g'][i][1] + data['g'][i][2] + data['g'][i][3] + data['g'][i][4] + data['g'][i][5])*0.2
+#                    for i in range(len(data))]
 
 data = pd.concat([data_HSR, data_DM], axis=0, ignore_index=True)
-data['g_value'] = [(data['g'][i][1] + data['g'][i][2] + data['g'][i][3] + data['g'][i][4] + data['g'][i][5])*0.2
-                   for i in range(len(data))]
-data['MYC_intensity/FISH_intensity'] = data['MYC_total_intensity']/data['nuclear_total_intensity']
+data['MYC_intensity/FISH_intensity'] = data['total_intensity_MYC_IF']/data['total_intensity_MYC_DNAFISH_in_nucleus']
 # data.to_csv('%sprocessed.txt' % master_folder, index=False, sep='\t')
 
 sns.set_palette(sns.color_palette(colors))
 
-ax1 = sns.jointplot(data=data, x='g_value', y='MYC_intensity/FISH_intensity', hue='sample')
+# ax1 = sns.jointplot(data=data, x='g_value', y='MYC_intensity/FISH_intensity', hue='sample')
+ax1 = sns.jointplot(data=data, x='g_correct', y='total_intensity_MYC_IF', hue='sample')
 
-_, g_fit_r2_DM, g_fit_a_DM = \
-    mat.fitting_linear_b0(data[data['sample'] == 'DM']['g_value'].tolist(),
-                          data[data['sample'] == 'DM']['MYC_intensity/FISH_intensity'].tolist())
-_, g_fit_r2_HSR, g_fit_a_HSR = \
-    mat.fitting_linear_b0(data[data['sample'] == 'HSR']['g_value'].tolist(),
-                          data[data['sample'] == 'HSR']['MYC_intensity/FISH_intensity'].tolist())
+# _, g_fit_r2_DM, g_fit_a_DM = \
+#     mat.fitting_linear_b0(data[data['sample'] == 'BRD4KO']['g_value'].tolist(),
+#                           data[data['sample'] == 'BRD4KO']['MYC_intensity/FISH_intensity'].tolist())
+# _, g_fit_r2_HSR, g_fit_a_HSR = \
+#     mat.fitting_linear_b0(data[data['sample'] == 'DM']['g_value'].tolist(),
+#                           data[data['sample'] == 'DM']['MYC_intensity/FISH_intensity'].tolist())
 
-x = np.arange(0, 20, 0.5)
-y_DM = g_fit_a_DM * x
-y_HSR = g_fit_a_HSR * x
-ax1.ax_joint.plot(x, y_HSR, linewidth=2, color=colors[0], linestyle='--')
-ax1.ax_joint.plot(x, y_DM, linewidth=2, color=colors[1], linestyle='--')
+# x = np.arange(0, 20, 0.5)
+# y_DM = g_fit_a_DM * x
+# y_HSR = g_fit_a_HSR * x
+# ax1.ax_joint.plot(x, y_HSR, linewidth=2, color=colors[0], linestyle='--')
+# ax1.ax_joint.plot(x, y_DM, linewidth=2, color=colors[1], linestyle='--')
 
-plt.savefig('%scomparison_of_g_value_vs_intensity_residue.pdf' % master_folder)
-plt.close()"""
+plt.savefig('%scomparison_of_g_correct_vs_MYC_IF_intensity.pdf' % master_folder)
+plt.close()
 
 
 """features = ['nuclear_area', 'nuclear_major_axis', 'nuclear_minor_axis', 'nuclear_axis_ratio', 'nuclear_circularity',
