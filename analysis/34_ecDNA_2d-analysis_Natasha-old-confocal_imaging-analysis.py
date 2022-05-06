@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from skimage.measure import label, regionprops
-from skimage.morphology import medial_axis
+from skimage.morphology import medial_axis, dilation, erosion
 import pandas as pd
 import math
 import numpy as np
@@ -10,21 +10,25 @@ import shared.math as mat
 import napari
 import skimage.io as skio
 import shared.dataframe as dat
+import shared.objects as obj
 
 # input parameters
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/211102_3hr_JQ1washout/3hrJQ1_3hrDMSO_WO/"
-prefix = '211102_COLODM'
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220301_ecDNA_ctrlAndJQ1_NatashaFile/"
+prefix = '210921_COLODM_washout_mycFISH'
 total_fov = 3
-sample = '3hrJQ1_3hrDMSO_WO'
+sample = 'JQ13hr'
 pixel_size = 40  # nm (Zeiss confocal scope)
 cell_avg_size = 10  # um (Colo)
 nuclear_size_range = [0.6, 1.5]  # used to filter nucleus
 nuclear_centroid_searching_range = 50  # pixel
-z_analyze = [25, 25, 16]
+z_analyze = [21, 19, 18]
 # 3hrJQ1_3hr1uMtriptolide_WO [22, 15]
 # 3hrJQ1_3hrDMSO_WO [25, 25, 16]
 # DMSO3hr [9, 14, 9]
 # JQ13hr [8, 9]
+
+# DMSO [16, 8]
+# JQ13hr [21, 19, 18]
 
 # SET UP PARAMETERS
 # single nuclear analysis
@@ -37,8 +41,8 @@ avg_img_nuclear_seg = np.zeros(shape=(avg_img_size, avg_img_size))
 avg_img_center = [int(avg_img_size / 2), int(avg_img_size / 2)]
 # auto-correlation analysis
 rmax = int(0.67 * local_size)  # ~100
-int_thresh_auto_correlation = 500  # need to be determined
-k_dots = 10000  # need to optimize
+int_thresh_auto_correlation = 300  # need to be determined
+k_dots = 12000  # need to optimize
 # segmentation
 local_factor_nuclear = rmax if (rmax % 2 == 1) else rmax+1  # ~99, needs to be odd number
 min_size_nuclear = (nuclear_size_range[0] * cell_avg_size * 1000/(pixel_size * 2)) ** 2 * math.pi
@@ -67,8 +71,10 @@ data = pd.DataFrame(columns=['FOV',
                              'mean_intensity_MYC_DNAFISH_in_nucleus',
                              'total_intensity_MYC_DNAFISH_in_nucleus',
                              'g',
+                             'g_correct',
                              'dg',
                              'g_value',
+                             'g_correct_value',
                              'radial_distribution_from_centroid',
                              'radial_distribution_from_edge',
                              'radial_distribution_relative_r',
@@ -108,7 +114,7 @@ for fov in range(total_fov):
             data_temp = data_temp.sort_values(by='total_intensity_MYC_DNAFISH_in_nucleus', ascending=False)
             data_temp.reset_index(drop=True, inplace=True)
             if max(data_temp[0:3]['z']) - min(data_temp[0:3]['z']) == 2:
-                for j in range(3):
+                for j in range(1):
                     print("Analyzing sub-nucleus %s/3" % (j+1))
                     z_nuclear_temp = data_temp['z'][j]
                     label_nuclear_temp = data_temp['label_nuclear'][j]
@@ -125,8 +131,6 @@ for fov in range(total_fov):
                     local_DNAFISH = img_DNAFISH.copy()
                     local_DNAFISH = local_DNAFISH[position[0]:position[1], position[2]:position[3]]
                     plt.imsave('%sFISH_fov%s_i%s_j%s_z%s.tiff' % (master_folder, fov, i, j, z_nuclear_temp), local_DNAFISH)
-                    plt.imsave('%slocal_seg_fov%s_i%s_j%s_z%s.tiff' % (master_folder, fov, i, j, z_nuclear_temp),
-                               local_nuclear_seg_convex)
 
                     # auto correlation
                     vector = []
@@ -143,9 +147,31 @@ for fov in range(total_fov):
                     img_dot = np.zeros_like(local_nuclear_seg_convex)
                     for l in random_dot:
                         img_dot[l[0]][l[1]] = img_dot[l[0]][l[1]] + 1
+                    img_dot_remove_bg = dilation(img_dot)
+                    img_dot_remove_bg = dilation(img_dot_remove_bg)
+                    img_dot_remove_bg = erosion(img_dot_remove_bg)
+                    img_dot_remove_bg = erosion(img_dot_remove_bg)
+                    img_dot_remove_bg = erosion(img_dot_remove_bg)
+                    img_dot_remove_bg = dilation(img_dot_remove_bg)
+                    img_dot_remove_bg_seg_filter = obj.remove_small(label(img_dot_remove_bg), 35)
+                    img_dot_remove_bg_filter = img_dot_remove_bg.copy()
+                    img_dot_remove_bg_filter[img_dot_remove_bg_seg_filter == 0] = 0
+                    """viewer = napari.Viewer()
+                    viewer.add_image(img_dot_remove_bg_filter)
+                    napari.run()"""
 
-                    _, r, g, dg = mat.auto_correlation(img_dot, local_nuclear_seg_convex, rmax)
+                    _, r, g, dg = mat.auto_correlation(img_dot_remove_bg_filter, local_nuclear_seg_convex, rmax)
                     g_value = (g[1] + g[2] + g[3] + g[4] + g[5]) * 0.2
+
+                    local_DNAFISH_temp = local_DNAFISH.copy()
+                    local_DNAFISH_temp[local_nuclear_seg_convex == 0] = 0
+                    total_intensity_MYC_DNAFISH_in_dot = np.sum(local_DNAFISH_temp)
+                    g_correct = list(np.array(g) * (total_intensity_MYC_DNAFISH_in_dot / 10000000.0))
+                    g_correct_value = g_value * (total_intensity_MYC_DNAFISH_in_dot / 10000000.0)
+
+                    plt.imsave('%simg_dot_fov%s_i%s_j%s_z%s.tiff' % (master_folder, fov, i, j, z_nuclear_temp), img_dot)
+                    plt.imsave('%simg_dot_remove_bg_filter_fov%s_i%s_j%s_z%s_g%s_g_correct%s.tiff' %
+                               (master_folder, fov, i, j, z_nuclear_temp, g_value, g_correct_value), img_dot_remove_bg_filter)
 
                     """viewer = napari.Viewer()
                     viewer.add_image(local_DNAFISH)
@@ -217,7 +243,8 @@ for fov in range(total_fov):
                                                  major_and_minor_axis_ratio_nuclear, circularity_nuclear,
                                                  eccentricity_nuclear, mean_intensity_nuclear,
                                                  mean_intensity_nuclear * area_nuclear, mean_intensity_DNAFISH,
-                                                 mean_intensity_DNAFISH * area_nuclear, g, dg, g_value,
+                                                 mean_intensity_DNAFISH * area_nuclear, g, g_correct, dg, g_value,
+                                                 g_correct_value,
                                                  radial_distribution_from_centroid, radial_distribution_from_edge,
                                                  radial_distribution_relative_r, R35l]
 
@@ -232,7 +259,7 @@ plt.imsave('%savg_DNAFISH_%s.tiff' % (master_folder, sample), DNAFISH_scaled)
 plt.imsave('%savg_nuclear_%s.tiff' % (master_folder, sample), nuclear_scaled)
 plt.imsave('%savg_nuclear_seg_%s.tiff' % (master_folder, sample), nuclear_seg_scaled)
 
-data_mean = pd.DataFrame(columns=['FOV',
+"""data_mean = pd.DataFrame(columns=['FOV',
                                   'z_analyze',
                                   'nuclear',
                                   'centroid_nuclear',
@@ -270,13 +297,13 @@ for x in range(int(len(data)/3)):
                                            data['total_intensity_MYC_DNAFISH_in_nucleus'][3*x], g_mean, g_value_mean,
                                            radial_distribution_relative_r_mean, R35l_mean]
 
-data_mean.to_csv('%s%s_mean.txt' % (master_folder, sample), index=False, sep='\t')
+data_mean.to_csv('%s%s_mean.txt' % (master_folder, sample), index=False, sep='\t')"""
 
-viewer = napari.Viewer()
+"""viewer = napari.Viewer()
 viewer.add_image(im_stack)
 napari.run()
 viewer = napari.Viewer()
 viewer.add_image(nuclear_seg_convex)
-napari.run()
+napari.run()"""
 
 print("DONE!")

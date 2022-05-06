@@ -16,9 +16,13 @@ import tifffile as tif
 import shared.dataframe as dat
 
 # input parameters
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220420_sp8_DMandBRD4_plate/DM_singleZ_imageJ/"
+
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/HSR_singleZ/"
+# prefix = 'DM_singleZ_25pos_RAW'
+sample = 'HSR'
+"""master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220420_sp8_DMandBRD4_plate/DM_singleZ_imageJ/"
 prefix = 'DM_singleZ_25pos_RAW'
-sample = 'DM'
+sample = 'DM'"""
 """master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220420_sp8_DMandBRD4_plate/BRD4KO_singleZ_imageJ/"
 prefix = 'DM-BRD4KO_singleZ_8pos_RAW'
 sample = 'BRD4KO'"""
@@ -27,14 +31,13 @@ cell_avg_size = 10  # um (Colo)
 nuclear_size_range = [0.6, 1.5]  # used to filter nucleus
 solidity_threshold_nuclear = 0.9
 n_nuclear_convex_dilation = 3
-DNAFISH_bg_correct_factor = 8000
+DNAFISH_bg_correct_factor = 0
 
 # LOAD IMAGE
-im_stack_nuclear = skio.imread("%s%s_ch00.tif" % (master_folder, prefix), plugin="tifffile")
-im_stack_DNAFISH = skio.imread("%sDNAFISH_corrected_%s_%s.tif" % (master_folder, sample, DNAFISH_bg_correct_factor),
-                               plugin="tifffile")
-im_stack_IF = skio.imread("%s%s_ch01.tif" % (master_folder, prefix), plugin="tifffile")
-im_stack_nuclear_seg_convex = skio.imread("%snuclear_seg_convex_%s.tif" % (master_folder, sample), plugin="tifffile")
+im_stack_nuclear = skio.imread("%s%s_nuclear.tif" % (master_folder, sample), plugin="tifffile")
+im_stack_DNAFISH = skio.imread("%s%s_DNAFISH.tif" % (master_folder, sample), plugin="tifffile")
+im_stack_IF = skio.imread("%s%s_IF.tif" % (master_folder, sample), plugin="tifffile")
+im_stack_nuclear_seg_convex = skio.imread("%s%s_nuclear_seg_convex.tif" % (master_folder, sample), plugin="tifffile")
 
 # SET UP PARAMETERS
 total_fov = im_stack_nuclear.shape[0]
@@ -49,13 +52,16 @@ avg_img_center = [int(avg_img_size / 2), int(avg_img_size / 2)]
 # auto-correlation analysis
 rmax = 100  # int(0.67 * local_size)
 int_thresh_auto_correlation = 10000  # need to be determined
-k_dots = 20000  # need to optimize
+k_dots = 10000  # need to optimize
 # segmentation
 local_factor_nuclear = 99  # ~99, needs to be odd number, rmax if (rmax % 2 == 1) else rmax+1
 min_size_nuclear = (nuclear_size_range[0] * cell_avg_size * 1000/(pixel_size * 2)) ** 2 * math.pi
 max_size_nuclear = (nuclear_size_range[1] * cell_avg_size * 1000/(pixel_size * 2)) ** 2 * math.pi
 extreme_val_ecDNA = 15000  # need to be determined
 connecting_factor_ecDNA = 8
+ecDNA_seg_min_size1 = 10
+ecDNA_seg_min_size2 = 20
+ecDNA_filter_intensity = 20000
 # radial distribution analysis
 radial_interval = 1
 radial_max = int(0.8 * local_size)  # ~120
@@ -100,16 +106,18 @@ for fov in range(total_fov):
 
     # ecDNA segmentation
     _, img_DNAFISH_seg = seg.find_organelle(img_DNAFISH, 'na', extreme_val=extreme_val_ecDNA,
-                                            bg_val=seg.get_bg_int([img_DNAFISH])[0], min_size=10, max_size=max_size_nuclear)
+                                            bg_val=seg.get_bg_int([img_DNAFISH])[0], min_size=ecDNA_seg_min_size1,
+                                            max_size=max_size_nuclear)
     img_DNAFISH_seg = binary_dilation(img_DNAFISH_seg, disk(connecting_factor_ecDNA))
     for i in range(connecting_factor_ecDNA):
         img_DNAFISH_seg = binary_erosion(img_DNAFISH_seg)
     img_DNAFISH_seg = ndimage.binary_fill_holes(img_DNAFISH_seg)
-    img_DNAFISH_seg = obj.remove_small(img_DNAFISH_seg, min_size=20)
+    img_DNAFISH_seg = obj.remove_small(img_DNAFISH_seg, min_size=ecDNA_seg_min_size2)
     ecDNA_seg[fov] = img_DNAFISH_seg
 
     # filter
-    img_nuclear_seg_convex = seg.filter_mean_int(img_nuclear_seg_convex, img_DNAFISH_seg, img_DNAFISH, 10000)
+    img_nuclear_seg_convex = seg.filter_mean_int(img_nuclear_seg_convex, img_DNAFISH_seg, img_DNAFISH,
+                                                 ecDNA_filter_intensity)
     img_DNAFISH_seg[img_nuclear_seg_convex == 0] = 0
     nuclear_seg_convex_filtered[fov] = img_nuclear_seg_convex
 
@@ -194,7 +202,8 @@ for fov in range(total_fov):
         radial_distribution_relative_r = \
             img.radial_distribution_from_distance_map(local_nuclear_seg, local_relative_r_map, local_DNAFISH,
                                                       relative_radial_interval, 1)
-        R35l = img.radial_percentage_from_distance_map(local_nuclear_seg, local_relative_r_map, local_DNAFISH, [0, 0.35])
+        R35l = img.radial_percentage_from_distance_map(local_nuclear_seg, local_relative_r_map, local_DNAFISH,
+                                                       [0, 0.35])
 
         # average plot and intensity saturation measurement
         print("Start generating average plot...")

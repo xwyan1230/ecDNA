@@ -8,13 +8,13 @@ import skimage.io as skio
 import tifffile as tif
 
 # input parameters
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/211102_3hr_JQ1washout/3hrJQ1_3hrDMSO_WO/"
-prefix = '211102_COLODM'
-sample = '3hrJQ1_3hrDMSO_WO'
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220301_ecDNA_ctrlAndJQ1_NatashaFile/"
+prefix = '210921_COLODM_washout_mycFISH'
+sample = 'JQ13hr'
 pixel_size = 40  # nm (Zeiss confocal scope)
 cell_avg_size = 10  # um (Colo)
 nuclear_size_range = [0.6, 1.5]  # used to filter nucleus
-total_fov = 2
+total_fov = 3
 
 # SET UP PARAMETERS
 # segmentation

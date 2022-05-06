@@ -15,10 +15,10 @@ mean_curve = []
 ci_lower = []
 ci_higher = []
 n_nuclear = []
-feature = 'g_value'
+feature = 'g_correct'
 
 for p in prefix:
-    data = pd.read_csv('%s%s_different_int_threshold_g.txt' % (master_folder, p), na_values=['.'], sep='\t')
+    data = pd.read_csv('%s%s.txt' % (master_folder, p), na_values=['.'], sep='\t')
     data[feature] = [dat.str_to_float(data[feature][i]) for i in range(len(data))]
 
     number_nuclear = len(data)
@@ -29,8 +29,8 @@ for p in prefix:
     ci_lower.append(FISH_ci_lower)
     ci_higher.append(FISH_ci_higher)
 
-    # r = np.arange(0, rmax + 1, 1)
-    r = np.arange(0, 2000, 100)
+    r = np.arange(0, rmax + 1, 1)
+    # r = np.arange(0, 2000, 100)
 
     plt.subplots(figsize=(6, 4))
     for i in range(len(data)):
@@ -41,7 +41,7 @@ for p in prefix:
     plt.xlabel('r')
     plt.ylabel('g')
     plt.legend(loc=2, bbox_to_anchor=(0.02, 0.99))
-    plt.savefig('%s/g_value_%s.pdf' % (master_folder, p))
+    plt.savefig('%s/%s_%s.pdf' % (master_folder, feature, p))
     plt.close()
 
 plt.subplots(figsize=(6, 4))
@@ -53,10 +53,10 @@ plt.axhline(y=1, color='#FF4500', linestyle='--')
 plt.xlabel('r')
 plt.ylabel('g')
 plt.legend(loc=2, bbox_to_anchor=(0.02, 0.99))
-plt.savefig('%s/g_value_comparison.pdf' % master_folder)
+plt.savefig('%s/%s_comparison.pdf' % (master_folder, feature))
 plt.close()
 
-for i in range(len(prefix)):
+"""for i in range(len(prefix)):
     plt.subplots(figsize=(6, 4))
     plt.plot(r, mean_curve[i], color=color[i], label='%s, n=%s' % (prefix[i], n_nuclear[i]))
     plt.plot(r, ci_lower[i], color=color[i], linestyle='--', linewidth=0.5)
@@ -66,4 +66,4 @@ for i in range(len(prefix)):
     plt.ylabel('g')
     plt.legend(loc=2, bbox_to_anchor=(0.02, 0.99))
     plt.savefig('%s/g_value_ci_%s.pdf' % (master_folder, prefix[i]))
-    plt.close()
+    plt.close()"""

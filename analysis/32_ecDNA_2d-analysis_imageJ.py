@@ -7,9 +7,9 @@ import skimage.io as skio
 import tifffile as tif
 
 # input parameters
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220420_sp8_DMandBRD4_plate/BRD4KO_singleZ_imageJ/"
-prefix = 'DM-BRD4KO_singleZ_8pos_RAW'
-sample = 'BRD4KO'
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220407_sp8_DMandHSR/DM_singleZ/"
+prefix = '20220407_DMandHSR_DM_singleZ'
+sample = 'DM'
 pixel_size = 58.7  # nm (sp8 confocal 3144x3144)
 cell_avg_size = 10  # um (Colo)
 nuclear_size_range = [0.6, 1.5]  # used to filter nucleus
@@ -17,8 +17,8 @@ solidity_threshold_nuclear = 0.9
 n_nuclear_convex_dilation = 3
 
 # LOAD IMAGE
-im_stack_nuclear = skio.imread("%s%s_ch00.tif" % (master_folder, prefix), plugin="tifffile")
-im_stack_DNAFISH = skio.imread("%s%s_ch02.tif" % (master_folder, prefix), plugin="tifffile")
+im_stack_nuclear = skio.imread("%s%s_nuclear.tif" % (master_folder, sample), plugin="tifffile")
+im_stack_DNAFISH = skio.imread("%s%s_DNAFISH.tif" % (master_folder, sample), plugin="tifffile")
 
 # SET UP PARAMETERS
 total_fov = im_stack_nuclear.shape[0]
@@ -47,15 +47,15 @@ for fov in range(total_fov):
     nuclear_seg_convex[fov] = img_nuclear_seg_convex
 
     # measure DNAFISH background
-    DNAFISH_props_temp = regionprops(img_nuclear_seg_convex, img_DNAFISH)
+    """DNAFISH_props_temp = regionprops(img_nuclear_seg_convex, img_DNAFISH)
     mean_intensity_background_MYC_DNAFISH = \
         mean_intensity_background_MYC_DNAFISH \
         + [DNAFISH_props_temp[j].mean_intensity for j in range(len(DNAFISH_props_temp))]
 avg_background_MYC_DNAFISH = sum(mean_intensity_background_MYC_DNAFISH)*1.0/len(mean_intensity_background_MYC_DNAFISH)
-print(avg_background_MYC_DNAFISH)
-tif.imsave('%snuclear_seg_convex_%s.tif' % (master_folder, sample), nuclear_seg_convex)
+print(avg_background_MYC_DNAFISH)"""
+tif.imsave('%s%s_nuclear_seg_convex.tif' % (master_folder, sample), nuclear_seg_convex)
 
-# Generate background corrected DNAFISH image
+"""# Generate background corrected DNAFISH image
 im_stack_DNAFISH_corrected = np.zeros(shape=(im_stack_nuclear.shape[0], im_stack_nuclear.shape[1],
                                              im_stack_nuclear.shape[2]), dtype=np.uint16)
 for fov in range(total_fov):
@@ -67,7 +67,7 @@ for fov in range(total_fov):
     img_DNAFISH_corrected = img_DNAFISH_corrected.astype(int)
     im_stack_DNAFISH_corrected[fov] = img_DNAFISH_corrected
 
-tif.imsave('%sDNAFISH_corrected_%s.tif' % (master_folder, sample), im_stack_DNAFISH_corrected)
+tif.imsave('%sDNAFISH_corrected_%s.tif' % (master_folder, sample), im_stack_DNAFISH_corrected)"""
 
 print("DONE!")
 
