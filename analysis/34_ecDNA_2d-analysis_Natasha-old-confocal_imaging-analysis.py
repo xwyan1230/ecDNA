@@ -15,13 +15,13 @@ import shared.objects as obj
 # input parameters
 master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220301_ecDNA_ctrlAndJQ1_NatashaFile/"
 prefix = '210921_COLODM_washout_mycFISH'
-total_fov = 3
-sample = 'JQ13hr'
+total_fov = 2
+sample = 'DMSO'
 pixel_size = 40  # nm (Zeiss confocal scope)
 cell_avg_size = 10  # um (Colo)
 nuclear_size_range = [0.6, 1.5]  # used to filter nucleus
 nuclear_centroid_searching_range = 50  # pixel
-z_analyze = [21, 19, 18]
+z_analyze = [16, 8]
 # 3hrJQ1_3hr1uMtriptolide_WO [22, 15]
 # 3hrJQ1_3hrDMSO_WO [25, 25, 16]
 # DMSO3hr [9, 14, 9]
@@ -42,7 +42,7 @@ avg_img_center = [int(avg_img_size / 2), int(avg_img_size / 2)]
 # auto-correlation analysis
 rmax = int(0.67 * local_size)  # ~100
 int_thresh_auto_correlation = 300  # need to be determined
-k_dots = 12000  # need to optimize
+k_dots = 10000  # need to optimize
 # segmentation
 local_factor_nuclear = rmax if (rmax % 2 == 1) else rmax+1  # ~99, needs to be odd number
 min_size_nuclear = (nuclear_size_range[0] * cell_avg_size * 1000/(pixel_size * 2)) ** 2 * math.pi
@@ -147,7 +147,7 @@ for fov in range(total_fov):
                     img_dot = np.zeros_like(local_nuclear_seg_convex)
                     for l in random_dot:
                         img_dot[l[0]][l[1]] = img_dot[l[0]][l[1]] + 1
-                    img_dot_remove_bg = dilation(img_dot)
+                    """img_dot_remove_bg = dilation(img_dot)
                     img_dot_remove_bg = dilation(img_dot_remove_bg)
                     img_dot_remove_bg = erosion(img_dot_remove_bg)
                     img_dot_remove_bg = erosion(img_dot_remove_bg)
@@ -155,12 +155,12 @@ for fov in range(total_fov):
                     img_dot_remove_bg = dilation(img_dot_remove_bg)
                     img_dot_remove_bg_seg_filter = obj.remove_small(label(img_dot_remove_bg), 35)
                     img_dot_remove_bg_filter = img_dot_remove_bg.copy()
-                    img_dot_remove_bg_filter[img_dot_remove_bg_seg_filter == 0] = 0
+                    img_dot_remove_bg_filter[img_dot_remove_bg_seg_filter == 0] = 0"""
                     """viewer = napari.Viewer()
-                    viewer.add_image(img_dot_remove_bg_filter)
+                    viewer.add_image(img_dot)
                     napari.run()"""
 
-                    _, r, g, dg = mat.auto_correlation(img_dot_remove_bg_filter, local_nuclear_seg_convex, rmax)
+                    _, r, g, dg = mat.auto_correlation(img_dot, local_nuclear_seg_convex, rmax)
                     g_value = (g[1] + g[2] + g[3] + g[4] + g[5]) * 0.2
 
                     local_DNAFISH_temp = local_DNAFISH.copy()
@@ -169,9 +169,10 @@ for fov in range(total_fov):
                     g_correct = list(np.array(g) * (total_intensity_MYC_DNAFISH_in_dot / 10000000.0))
                     g_correct_value = g_value * (total_intensity_MYC_DNAFISH_in_dot / 10000000.0)
 
-                    plt.imsave('%simg_dot_fov%s_i%s_j%s_z%s.tiff' % (master_folder, fov, i, j, z_nuclear_temp), img_dot)
-                    plt.imsave('%simg_dot_remove_bg_filter_fov%s_i%s_j%s_z%s_g%s_g_correct%s.tiff' %
-                               (master_folder, fov, i, j, z_nuclear_temp, g_value, g_correct_value), img_dot_remove_bg_filter)
+                    plt.imsave('%simg_dot_fov%s_i%s_j%s_z%s_g%s_g_correct%s.tiff' %
+                               (master_folder, fov, i, j, z_nuclear_temp, g_value, g_correct_value), img_dot)
+                    """plt.imsave('%simg_dot_remove_bg_filter_fov%s_i%s_j%s_z%s_g%s_g_correct%s.tiff' %
+                               (master_folder, fov, i, j, z_nuclear_temp, g_value, g_correct_value), img_dot_remove_bg_filter)"""
 
                     """viewer = napari.Viewer()
                     viewer.add_image(local_DNAFISH)

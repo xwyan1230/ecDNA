@@ -7,18 +7,18 @@ import numpy as np
 import random
 import shared.math as mat
 
-master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220301_ecDNA_ctrlAndJQ1_NatashaFile/"
+master_folder = "/Users/xwyan/Dropbox/LAB/ChangLab/Projects/Data/20220420_sp8_DMandBRD4_plate/ANALYSIS/noFilter_img-dot_threshold10000_kdots10000/"
 colors = [(0.2, 0.2, 0.2), (0.85, 0.35, 0.25)]
 rmax = 150
 radial_interval = 1
 radial_max = 120
 relative_radial_interval = 0.01
 
-data_sample = pd.read_csv('%sJQ13hr.txt' % master_folder, na_values=['.'], sep='\t')
-data_ctrl = pd.read_csv('%sDMSO.txt' % master_folder, na_values=['.'], sep='\t')
+data_sample = pd.read_csv('%sBRD4KO.txt' % master_folder, na_values=['.'], sep='\t')
+data_ctrl = pd.read_csv('%sDM.txt' % master_folder, na_values=['.'], sep='\t')
 
 # auto-correlation
-feature = 'g_correct'
+"""feature = 'g_correct'
 sample = 'JQ13hr'
 ctrl = 'DMSO'
 
@@ -47,14 +47,13 @@ plt.plot(r, ci_higher_ctrl, color=colors[0], linestyle='--', linewidth=0.5)
 plt.xlabel('r')
 plt.ylabel(feature)
 plt.legend()
-plt.ylim([-0.5, 35.5])
+plt.ylim([-0.5, 30.5])
 plt.savefig('%s/%s_comparison.pdf' % (master_folder, feature))
-plt.close()
+plt.close()"""
 
 # vs MYC expression
-"""feature = 'g_value'
-sample = 'DM'
-ctrl = 'HSR'
+sample = 'BRD4KO'
+ctrl = 'DM'
 
 data_sample['sample'] = [sample] * len(data_sample)
 data_ctrl['sample'] = [ctrl] * len(data_ctrl)
@@ -63,15 +62,12 @@ data = pd.concat([data_ctrl, data_sample], axis=0, ignore_index=True)
 data['MYC_expression_probability_per_copy'] = \
     data['total_intensity_MYC_IF']/data['total_intensity_MYC_DNAFISH_in_nucleus']
 
+feature_x = 'g_value'
+feature_y = 'total_intensity_MYC_DNAFISH_in_nucleus'
+
 sns.set_palette(sns.color_palette(colors))
 
-ax1 = sns.jointplot(data=data, x=feature, y='MYC_expression_probability_per_copy', hue='sample', alpha=0.7, s=10)
-plt.savefig('%scomparison_of_%s_vs_MYC_expression_probability_per_copy.pdf' % (master_folder, feature))
+ax1 = sns.jointplot(data=data, x=feature_x, y=feature_y, hue='sample', alpha=0.7, s=10)
+plt.savefig('%scomparison_of_%s_vs_%s.pdf' % (master_folder, feature_x, feature_y))
 plt.close()
-ax1 = sns.jointplot(data=data, x=feature, y='total_intensity_MYC_IF', hue='sample', alpha=0.7, s=10)
-plt.savefig('%scomparison_of_%s_vs_MYC_expression.pdf' % (master_folder, feature))
-plt.close()
-ax1 = sns.jointplot(data=data, x=feature, y='total_intensity_MYC_DNAFISH_in_nucleus', hue='sample', alpha=0.7, s=10)
-plt.savefig('%scomparison_of_%s_vs_total_intensity_MYC_DNAFISH_in_nucleus.pdf' % (master_folder, feature))
-plt.close()"""
 
