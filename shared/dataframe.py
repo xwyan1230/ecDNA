@@ -35,6 +35,22 @@ List related:
     str_to_list_of_float
         FUNCTION: transform a string into a list of lists of float
         SYNTAX:   str_to_list_of_float(string: str)
+    
+    list_smooth
+        FUNCTION: smooth a list over neighbouring elements
+        SYNTAX: list_smooth(lst: list, smooth_factor: int)
+    
+    list_circle_smooth
+        FUNCTION: smooth a list over neighbouring elements, edge will be connected to perform circle smooth
+        SYNTAX:   list_circle_smooth(lst: list, smooth_factor: int)
+    
+    list_peak_center
+        FUNCTION: center the maximum number of a list, shift the other elements accordingly
+        SYNTAX:   list_peak_center(lst: list)
+    
+    list_peak_center_with_control
+        FUNCTION: center the maximum number of given list lst, shift lst_ctrl based on maximum from lst
+        SYNTAX:   list_peak_center_with_control(lst: list, lst_ctrl: list)
 
 Matrix related:
     matrix_pad_with_zeros
@@ -45,6 +61,7 @@ Dataframe related:
     radial_distribution
         FUNCTION: analyze feature_y distribution based on feature_x binning
         SYNTAX:   radial_distribution(df: pd.DataFrame, feature_x, feature_y, interval: float, feature_max: float)
+
 
 """
 
@@ -242,3 +259,72 @@ def list_separation(df: pd.DataFrame, key: str):
 
     return x, y
 
+
+def list_smooth(lst: list, smooth_factor: int):
+    """
+    Smooth a list over neighbouring elements
+
+    :param lst: list, input list
+    :param smooth_factor: int, number of neighbouring elements used to smooth across
+    :return:
+    """
+    out = []
+    for i in range(len(lst)-smooth_factor+1):
+        temp = lst[i]
+        for j in range(smooth_factor-1):
+            temp = temp + lst[i+j+1]
+        out.append(temp/smooth_factor)
+
+    return out
+
+
+def list_circle_smooth(lst: list, smooth_factor: int):
+    """
+    Smooth a list over neighbouring elements, edge will be connected to perform circle smooth
+
+    :param lst: list, input list
+    :param smooth_factor: int, number of neighbouring elements used to smooth across
+    :return:
+    """
+    lst_double = list(lst) + list(lst)
+    out = []
+    for i in range(len(lst)):
+        temp = lst[i]
+        for j in range(smooth_factor - 1):
+            temp = temp + lst_double[i + j + 1]
+        out.append(temp / smooth_factor)
+
+    return out
+
+
+def list_peak_center(lst: list):
+    """
+    Center the maximum number of a list, shift the other elements accordingly
+
+    :param lst: list, input list
+    :return:
+    """
+    center = int(len(lst)/2)+1
+    peak_index = lst.index(np.max(lst))
+    lst_temp = lst[peak_index:] + lst[0:peak_index]
+    out = lst_temp[center:] + lst_temp[0: center]
+
+    return out
+
+
+def list_peak_center_with_control(lst: list, lst_ctrl: list):
+    """
+    Center the maximum number of given list lst, shift lst_ctrl based on maximum from lst
+
+    :param lst: list, input list
+    :param lst_ctrl: list, control list
+    :return:
+    """
+    center = int(len(lst)/2)+1
+    peak_index = lst.index(np.max(lst))
+    lst_temp = lst[peak_index:] + lst[0:peak_index]
+    lst_ctrl_temp = lst_ctrl[peak_index:] + lst_ctrl[0:peak_index]
+    out = lst_temp[center:] + lst_temp[0:center]
+    out_ctrl = lst_ctrl_temp[center:] + lst_ctrl_temp[0:center]
+
+    return out, out_ctrl

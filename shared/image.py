@@ -76,6 +76,10 @@ save_3d_image
 load_3d_image
     FUNCTION: load 3d image as np.array (require reshape)
     SYNTAX:   load_3d_image(load_location: str, file_name: str, shape2: int)
+
+angle_map_from_point
+    FUNCTION: generate angle map from point for given image
+    SYNTAX:   angle_map_from_point(img: np.array, point: tuple)
 """
 
 
@@ -485,3 +489,24 @@ def load_3d_image(load_location: str, file_name: str, shape2: int):
     loaded_arr = np.loadtxt("%s%s.txt" % (load_location, file_name))
     load_original_arr = loaded_arr.reshape(loaded_arr.shape[0], loaded_arr.shape[1] // shape2, shape2)
     return load_original_arr
+
+
+def angle_map_from_point(img: np.array, point: tuple):
+    """
+    Generate angle map from point for given image
+
+    :param img: np.array, input image
+    :param point: given point
+    :return:
+    """
+    p = [round(point[0]), round(point[1])]
+    image_shape = [len(img), len(img[0])]
+    ydis = np.array([np.arange(-p[0], image_shape[0] - p[0], 1)]).transpose() * np.ones(image_shape[1])
+    xdis = np.array([np.ones(image_shape[0])]).transpose() * np.arange(-p[1], image_shape[1] - p[1], 1)
+    dis = (ydis * ydis + xdis * xdis)**0.5
+    out = np.arcsin(np.abs(xdis)/dis) * 180/np.pi
+    out[(ydis > 0) & (xdis >= 0)] = 180 - out[(ydis > 0) & (xdis >= 0)]
+    out[(ydis > 0) & (xdis < 0)] = out[(ydis > 0) & (xdis < 0)] + 180
+    out[(ydis <= 0) & (xdis < 0)] = 360 - out[(ydis <= 0) & (xdis < 0)]
+
+    return out
